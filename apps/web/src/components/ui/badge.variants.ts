@@ -10,7 +10,7 @@ export const badgeVariants = cva(
         essential: 'bg-danger-bg text-danger-fg',
         warning: 'bg-warning-bg text-warning-fg',
         info: 'bg-info-bg text-info-fg',
-        success: 'bg-secondary text-white',
+        success: 'bg-secondary-container text-on-secondary-container',
       },
     },
     defaultVariants: {

@@ -34,6 +34,7 @@ cd apps/web && npm run lint           # oxlint
 cd apps/web && npm run format         # prettier
 cd apps/web && npm test               # vitest
 cd apps/web && npm run api:types      # OpenAPI -> src/lib/api/schema.d.ts
+cd apps/web && npm run covers:fetch   # cover fotky z Wikimedia Commons
 ```
 
 ## Architektura – pravidla, která se nesmí porušit
@@ -75,6 +76,8 @@ src/
 - Alias `@/` = `src/`. Používej ho, ne `../../..`.
 - Formuláře = `react-hook-form` + `zod`.
 - `.storybook/` je tooling, ne aplikace. Nestaví se do produkce.
+- **Cover fotky se jen generují** – nové položky do manifestu `scripts/fetch-covers.mjs`, pak
+  `npm run covers:fetch`. `covers.generated.ts` a `public/covers/CREDITS.md` nikdy neupravuj ručně.
 
 ## Dokumentace
 

@@ -25,6 +25,8 @@ Z `DESIGN.md` se mapují 1:1:
   --color-primary: #0f766e;
   --color-primary-hover: #115e59;
   --color-secondary: #10b981;
+  --color-secondary-container: #6cf8bb;
+  --color-on-secondary-container: #00714d;
   --color-tertiary: #ccfbf1;
 
   /* linky */
@@ -62,8 +64,32 @@ Primitiva (`src/components/ui/`) – bez business logiky, plně řízená props:
 
 Kompozitní (`src/features/*/components/`) – skládají primitiva a znají doménu:
 
-`TripCard` · `TripHeader` · `PackingCategory` · `ItemRow` · `ItemCheckbox` · `WeightWidget` ·
+`TripCard` · `CoverPicker` · `TripHeader` · `PackingCategory` · `ItemRow` · `ItemCheckbox` · `WeightWidget` ·
 `TemplateCard` · `TemplatePicker` · `TripProgress`
+
+## Cover fotky
+
+Výlet má výchozí fotografii z kurátorované sady (`asia-tokyo`, `trip-bike-trail`, …), takže nový
+výlet nikdy nezačíná prázdnou kartou.
+
+| Věc | Kde |
+|---|---|
+| Fotky | `apps/web/public/covers/*.jpg` (900 px, lokálně – ne hotlink) |
+| Kurátorský seznam + stahování | `apps/web/scripts/fetch-covers.mjs` |
+| Metadata a atribuce | `apps/web/public/covers/covers.json`, `CREDITS.md` |
+| Typovaný registr pro UI | `apps/web/src/features/trips/covers.generated.ts` |
+
+Pravidla:
+
+1. **Novou fotku přidáš jen do manifestu** ve skriptu a spustíš `npm run covers:fetch`. Nikdy
+   needituj `covers.generated.ts` ani `CREDITS.md` – přepíše je skript.
+2. **Zdroj musí být volný** (Wikimedia Commons: CC0 / CC BY / CC BY-SA / public domain). Fotky
+   se ukládají do repa, aby aplikace nezávisela na cizím serveru.
+3. **Fotky se needitují** (žádné ořezy v Photoshopu) – karty je ořezávají přes `object-cover`.
+4. Když je potřeba fotku vyměnit, přidej `title` do manifestu (připne konkrétní soubor),
+   ne jen změň `query` – hledání není stabilní.
+5. `CREDITS.md` je součást distribuce, ne dokumentace „pro jistotu“ – bez atribuce fotky
+   nesmí do repa.
 
 ## Storybook
 

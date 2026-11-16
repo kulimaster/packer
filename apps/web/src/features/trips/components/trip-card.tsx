@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { cn } from '@/lib/cn';
+import { getCover } from '../covers';
 
 export type TripStatus = 'not-started' | 'in-progress' | 'ready';
 
@@ -16,6 +17,9 @@ export type TripSummary = {
   packed: number;
   total: number;
   status: TripStatus;
+  /** Id výchozí fotky z registru `covers`. */
+  coverId?: string;
+  /** Vlastní fotka (upload) – má přednost před `coverId`. */
   imageUrl?: string;
 };
 
@@ -34,20 +38,39 @@ const statusTone: Record<TripStatus, BadgeTone> = {
 type TripCardProps = {
   trip: TripSummary;
   onContinue?: () => void;
+  /**
+   * `soft` = světle mint (hlavní CTA obrazovky je jinde), `primary` = plná teal.
+   * Výchozí `soft` odpovídá designu (`design/screens/trips-mobile.png`).
+   */
+  ctaVariant?: 'soft' | 'primary';
   className?: string;
 };
 
-export function TripCard({ trip, onContinue, className }: TripCardProps) {
+export function TripCard({ trip, onContinue, ctaVariant = 'soft', className }: TripCardProps) {
+  // Vlastní fotka vyhrává; jinak výchozí cover; jinak gradient.
+  const imageUrl = trip.imageUrl ?? getCover(trip.coverId)?.file;
+
   return (
     <Card className={cn('overflow-hidden', className)}>
       <div className="relative h-40 w-full bg-gradient-to-br from-primary to-secondary">
-        {trip.imageUrl ? (
-          <img src={trip.imageUrl} alt="" className="size-full object-cover" />
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="size-full object-cover"
+          />
         ) : null}
         <Badge tone={statusTone[trip.status]} className="absolute top-3 right-3">
           {trip.status === 'ready' ? '✓ ' : ''}
           {statusLabel[trip.status]}
         </Badge>
+        {/* Scrim drží název čitelný i na světlé fotce (skála, pláž, sníh). */}
+        <div
+          aria-hidden
+          className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-on-surface/75 via-on-surface/25 to-transparent"
+        />
         <p className="absolute bottom-3 left-4 font-display text-2xl font-bold text-white drop-shadow-sm">
           {trip.title}
         </p>
@@ -76,7 +99,7 @@ export function TripCard({ trip, onContinue, className }: TripCardProps) {
           showValue
         />
 
-        <Button variant="soft" fullWidth onClick={onContinue}>
+        <Button variant={ctaVariant} fullWidth onClick={onContinue}>
           Continue Packing
         </Button>
       </div>

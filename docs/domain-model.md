@@ -32,6 +32,7 @@ Spravuje ASP.NET Core Identity. Vlastní doménová data o uživateli jsou jen t
 | `OwnerId` | `Guid` | → `User` |
 | `Title` | `string` | 1–120, povinné ("Asia Vacation") |
 | `Destination` | `string?` | max 160 ("Tokyo & Kyoto, Japan") |
+| `CoverImage` | `string?` | id fotky z registru `covers` (např. `asia-tokyo`), ne URL |
 | `StartDate` | `DateOnly?` | |
 | `EndDate` | `DateOnly?` | |
 | `IsArchived` | `bool` | |
@@ -42,6 +43,9 @@ Spravuje ASP.NET Core Identity. Vlastní doménová data o uživateli jsou jen t
 - `Title` nesmí být prázdný ani samé mezery.
 - Pokud jsou oba datumy vyplněné: `EndDate >= StartDate`.
 - Archivovaný výlet nelze editovat (jen odarchivovat).
+- `CoverImage` je **klíč**, ne URL. Fotky jsou součástí frontendu (`apps/web/public/covers/`),
+  takže se v DB neukládá cesta ani binární data. Neznámý klíč (fotka byla z registru odebrána)
+  se zobrazí jako gradient – UI nesmí spadnout.
 
 **Odvozený stav (neukládá se)**
 

@@ -14,7 +14,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
-    "api:types": "openapi-typescript http://localhost:5000/openapi/v1.json -o src/lib/api/schema.d.ts"
+    "api:types": "openapi-typescript http://localhost:5000/openapi/v1.json -o src/lib/api/schema.d.ts",
+    "covers:fetch": "node scripts/fetch-covers.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.3.0",

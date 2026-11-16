@@ -22,6 +22,8 @@
   --color-primary: #0f766e;
   --color-primary-hover: #115e59;
   --color-secondary: #10b981;
+  --color-secondary-container: #6cf8bb;
+  --color-on-secondary-container: #00714d;
   --color-tertiary: #ccfbf1;
 
   /* Stavy a badge */

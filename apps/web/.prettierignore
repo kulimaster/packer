@@ -4,3 +4,8 @@ node_modules
 package-lock.json
 coverage
 .oxlintrc.json
+
+# Generované skriptem scripts/fetch-covers.mjs
+public/covers/covers.json
+public/covers/CREDITS.md
+src/features/trips/covers.generated.ts
