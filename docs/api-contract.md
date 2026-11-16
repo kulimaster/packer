@@ -38,6 +38,20 @@ Skript stáhne spec a přepíše `src/lib/api/schema.d.ts`.
 - `DateOnly` jako `"2026-11-20"`, časy jako ISO 8601 s offsetem.
 - Žádná verze v URL pro v1. Až bude potřeba, půjde o `/api/v2` vedle `/api`.
 
+## Endpointy v1
+
+| Metoda | Cesta | Poznámka |
+|---|---|---|
+| `GET` | `/api/trips?includeArchived=false` | seznam výletů s počty položek a odvozeným stavem |
+| `POST` | `/api/trips` | založení výletu, `201` + `Location` |
+| `GET` | `/api/auth/csrf` | antiforgery token |
+| `POST` | `/api/auth/register` | registrace + přihlášení |
+| `POST` | `/api/auth/login` | přihlášení |
+| `POST` | `/api/auth/logout` | odhlášení |
+| `GET` | `/api/auth/me` | aktuální uživatel |
+
+Mutace (`POST`) vyžadují `X-CSRF-TOKEN` i platnou cookie.
+
 ## Chybová odpověď
 
 Vždy stejný tvar:
@@ -64,3 +78,14 @@ Vždy stejný tvar:
 
 Cookie je httpOnly, takže ji JS nevidí – jen se posílá. Klient musí mít `credentials: "include"`
 a posílat antiforgery token v hlavičce `X-CSRF-TOKEN` u mutací.
+
+```text
+GET  /api/auth/csrf      → { token } + nastaví cookie
+POST /api/auth/register  → 201, přihlásí
+POST /api/auth/login     → 200, přihlásí
+POST /api/auth/logout    → 204
+GET  /api/auth/me        → 200 { id, email, displayName } | 401
+```
+
+**Token je vázaný na uživatele.** Po `register`/`login`/`logout` je token získaný dřív neplatný –
+klient si musí vyžádat nový (`GET /api/auth/csrf`). Jinak dostane `400 csrf_invalid`.

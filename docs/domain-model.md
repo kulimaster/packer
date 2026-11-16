@@ -24,6 +24,10 @@ User 1 ──── * Template ──── * TemplateItem
 
 Spravuje ASP.NET Core Identity. Vlastní doménová data o uživateli jsou jen tato.
 
+V kódu je to `ApplicationUser : IdentityUser<Guid>` v `Packer.Infrastructure` – Domain o uživateli
+neví, drží jen `OwnerId`. Kdyby se přidal `TripMember`, doména dostane vlastní `UserId` value object
+a Identity zůstane implementační detail.
+
 ### Trip
 
 | Pole | Typ | Poznámka |
@@ -95,13 +99,13 @@ registru ikon, ne obrázek v DB.
 | `Note` | `string?` | max 300 ("Check validity > 6 months") |
 | `Quantity` | `int` | >= 1, default 1 |
 | `IsEssential` | `bool` | badge "Essential" |
-| `Flags` | `ItemFlags` | bitová maska, viz níže |
+| `Flags` | `ItemTraits` | bitová maska, viz níže |
 | `WeightGrams` | `int?` | hmotnost **jednoho** kusu |
 | `IsPacked` | `bool` | |
 | `PackedAt` | `DateTimeOffset?` | |
 | `Position` | `int` | pořadí v kategorii |
 
-**`ItemFlags`** (bitová maska, v DB `int`)
+**`ItemTraits`** (bitová maska, v DB `int`)
 
 | Flag | Význam |
 |---|---|
