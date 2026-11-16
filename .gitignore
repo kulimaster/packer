@@ -27,6 +27,7 @@ publish/
 node_modules/
 dist/
 dist-ssr/
+storybook-static/
 .vite/
 *.tsbuildinfo
 npm-debug.log*

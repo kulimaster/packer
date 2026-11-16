@@ -25,10 +25,15 @@ dotnet ef database update -p apps/api/src/Packer.Infrastructure -s apps/api/src/
 # --- DB pro lokální vývoj ---
 podman compose -f deploy/compose.dev.yaml up -d
 
-# --- Web (až bude založený) ---
-cd apps/web && npm run dev
+# --- Web ---
+cd apps/web && npm run dev            # http://localhost:5173 (proxy /api -> :5000)
+cd apps/web && npm run storybook      # http://localhost:6006
 cd apps/web && npm run build
-cd apps/web && npm run storybook
+cd apps/web && npm run typecheck
+cd apps/web && npm run lint           # oxlint
+cd apps/web && npm run format         # prettier
+cd apps/web && npm test               # vitest
+cd apps/web && npm run api:types      # OpenAPI -> src/lib/api/schema.d.ts
 ```
 
 ## Architektura – pravidla, která se nesmí porušit
@@ -51,13 +56,25 @@ cd apps/web && npm run storybook
 - Žádné `DateTime.Now` – čas jde přes `IClock`.
 - Názvy: třídy/metody anglicky, komentáře a dokumentace česky.
 
-## Frontend konvence (až bude založený)
+## Frontend konvence
+
+```
+src/
+  app/           providery, router, AppShell
+  components/ui/ primitiva design systému (Button, Card, Checkbox…)
+  features/      doménové komponenty (trips/components/TripCard…)
+  pages/         obrazovky
+  lib/           cn(), api klient
+  styles/        tokens.css
+```
 
 - **Barvy a spacing jen přes tokeny** z `apps/web/src/styles/tokens.css`. Žádné `#0f766e` v komponentě.
 - **Každá komponenta má story** (`*.stories.tsx`) ve stavech: default, hover, focus, disabled, loading, empty, error, dlouhý text.
 - `any` je zakázané. `unknown` + narrowing, nebo typ z `schema.d.ts`.
 - Server state = TanStack Query. Žádný Redux. Lokální UI state = `useState`/`useReducer`.
+- Alias `@/` = `src/`. Používej ho, ne `../../..`.
 - Formuláře = `react-hook-form` + `zod`.
+- `.storybook/` je tooling, ne aplikace. Nestaví se do produkce.
 
 ## Dokumentace
 

@@ -67,7 +67,7 @@ Kompozitní (`src/features/*/components/`) – skládají primitiva a znají dom
 
 ## Storybook
 
-- Storybook 9 + `@storybook/react-vite`, start: `npm run storybook`.
+- Storybook 10 + `@storybook/react-vite`, start: `npm run storybook` (port 6006).
 - Story je **součást definice hotové komponenty**. Komponenta bez story = nedokončená.
 - Povinné story (kde dává smysl): `Default`, `Loading`, `Empty`, `Error`, `Disabled`, `LongText`.
 - Žádné `style={{ color: ... }}` ve stories – jen props a tokeny.

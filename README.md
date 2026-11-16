@@ -42,11 +42,18 @@ podman compose -f deploy/compose.dev.yaml up -d
 # 2. API (http://localhost:5000)
 dotnet run --project apps/api/src/Packer.Api
 
-# 3. testy
+# 3. web (http://localhost:5173)
+cd apps/web && npm install && npm run dev
+
+# 4. Storybook (http://localhost:6006) – katalog komponent
+cd apps/web && npm run storybook
+
+# testy
 dotnet test apps/api/Packer.slnx
+cd apps/web && npm test
 ```
 
-Frontend zatím není založený – přibude v dalším kroku (`npm run dev` v `apps/web`).
+V devu jde `/api` z Vite přes proxy na `http://localhost:5000`, takže žádný CORS.
 
 ## Dokumentace
 

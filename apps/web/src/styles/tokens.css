@@ -1,0 +1,73 @@
+/*
+  Design tokeny – jediný zdroj barev, radiusů, stínů a fontů.
+  Zdroj: design/DESIGN.md
+
+  PRAVIDLO: v komponentách se nikdy neobjevuje hex hodnota ani rgb().
+  Chybí-li token, přidej ho sem, ne do komponenty.
+*/
+
+@theme {
+  /* Plochy */
+  --color-surface: #f8f9fa;
+  --color-surface-container: #edeeef;
+  --color-surface-container-high: #e7e8e9;
+  --color-card: #ffffff;
+
+  /* Text */
+  --color-on-surface: #191c1d;
+  --color-on-surface-variant: #3e4947;
+  --color-muted: #9ca3af;
+
+  /* Akcenty */
+  --color-primary: #0f766e;
+  --color-primary-hover: #115e59;
+  --color-secondary: #10b981;
+  --color-tertiary: #ccfbf1;
+
+  /* Stavy a badge */
+  --color-danger: #ba1a1a;
+  --color-danger-bg: #ffe4e6;
+  --color-danger-fg: #be123c;
+  --color-warning-bg: #fef3c7;
+  --color-warning-fg: #b45309;
+  --color-info-bg: #e0f2fe;
+  --color-info-fg: #0369a1;
+
+  /* Linky */
+  --color-outline: #e5e7eb;
+  --color-outline-strong: #d1d5db;
+
+  /* Radius */
+  --radius-card: 1rem;
+  --radius-control: 0.375rem;
+  --radius-input: 0.75rem;
+
+  /* Fonty */
+  --font-display: 'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+
+  /* Stíny */
+  --shadow-card: 0 1px 3px 0 rgb(17 24 39 / 0.04), 0 1px 2px -1px rgb(17 24 39 / 0.02);
+  --shadow-float: 0 10px 15px -3px rgb(15 118 110 / 0.08), 0 4px 6px -4px rgb(17 24 39 / 0.04);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-surface font-body text-on-surface antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+}
