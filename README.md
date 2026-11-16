@@ -7,7 +7,9 @@ zaškrtáváš sbaleno a vidíš, kolik ti zbývá a kolik to váží.
 
 ## Stav
 
-`bootstrap` – hotová kostra repa a dokumentace. Aplikační kód se teprve začíná psát.
+`v1 ve vývoji` – hotový design systém a první end-to-end řez: registrace/přihlášení
+(cookie + CSRF), seznam výletů a založení výletu přes `/api/trips`. Kategorie, položky,
+bagy a šablony jsou v databázi připravené, ale ještě bez endpointů a obrazovek.
 
 ## Stack
 

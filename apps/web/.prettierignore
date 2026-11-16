@@ -9,3 +9,6 @@ coverage
 public/covers/covers.json
 public/covers/CREDITS.md
 src/features/trips/covers.generated.ts
+
+# Generovane openapi-typescript - needituje se rucne
+src/lib/api/schema.d.ts
