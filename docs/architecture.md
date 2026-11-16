@@ -44,19 +44,18 @@ GET /api/trips/{id}
   → Api: 200 + JSON / 404 / 403 / 400
 ```
 
-### Struktura složek (až bude kód)
+### Struktura složek
 
 ```
 Packer.Application/
   Trips/
-    CreateTrip/        CreateTripHandler.cs, CreateTripCommand.cs, TripDto.cs
-    GetTrips/
-    ArchiveTrip/
-  Items/
-    AddItem/
-    ToggleItem/
-  Templates/
-  Common/              IAppDbContext.cs, IClock.cs, Error.cs
+    TripSummary.cs
+    CreateTrip/        CreateTripRequest.cs, CreateTripHandler.cs, CreateTripRequestValidator.cs
+    GetTrips/          GetTripsHandler.cs
+    ArchiveTrip/       (zatím chybí)
+  Items/               (zatím chybí)
+  Templates/           (zatím chybí)
+  Common/              IAppDbContext.cs, IClock.cs, ICurrentUser.cs, Exceptions/
 ```
 
 Feature = složka. Ne `Services/`, ne `Handlers/`. Důvod: když potřebuješ změnit "přidání položky",
@@ -64,8 +63,9 @@ vidíš všechny související soubory na jednom místě.
 
 ## Chybové stavy
 
-- `Application` vyhazuje doménové výjimky (`NotFoundException`, `ForbiddenException`, `ValidationException`).
-- `Api` je mapuje middlewarem na HTTP: 400, 403, 404, 409.
+- `Application` vyhazuje vlastní výjimky (`NotFoundException`, `ConflictException`,
+  `UnauthenticatedException`, `ValidationFailedException`), doména `DomainException`.
+- `Api` je mapuje middlewarem na HTTP: 400, 401, 404, 409.
 - Tělo chyby má vždy stejný tvar: `{ "code": "...", "message": "...", "errors": { ... } }`.
 - Nikdy neposílej klientovi stack trace ani text výjimky z databáze.
 

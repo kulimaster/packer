@@ -61,6 +61,8 @@ a Identity zůstane implementační detail.
 | `Archived` | `IsArchived` | "Archived" |
 
 Proč odvozený: uložený stav by se musel přepočítávat při každé změně položky a dřív nebo později by lhal.
+Archivace má přednost: výlet, který je celý sbalený a zároveň archivovaný, je `Archived`, ne `Ready`.
+Prázdný výlet (`total = 0`) není `Ready` – není co balit.
 
 ### Bag
 

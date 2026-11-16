@@ -70,7 +70,7 @@ Vždy stejný tvar:
 |---|---|
 | 400 | validační chyba vstupu (`errors` vyplněné) |
 | 401 | nepřihlášený |
-| 403 | přihlášený, ale cizí výlet |
+| 403 | přihlášený, ale nemá oprávnění (role `viewer` až se sdílením) |
 | 404 | entita neexistuje **nebo** nepatří uživateli (nezrazuj existenci) |
 | 409 | konflikt stavu (editace archivovaného výletu) |
 
