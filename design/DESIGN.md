@@ -204,10 +204,10 @@ The shape language conveys safety, modernity, and tactile approachability throug
 ### Checkboxes & Selection Controls
 - **Checkboxes**: 22px × 22px, 6px border radius.
   - Unchecked: `#FFFFFF` fill with 1.5px border `#D1D5DB`.
-  - Checked: Solid `#10B981` fill with an animated white checkmark glyph. Strikethrough and muted gray transition (`#9CA3AF`) applied instantly to the paired label text.
+  - Checked: Solid `#0F766E` (primary) fill with an animated white checkmark glyph. Strikethrough and muted gray transition (`#9CA3AF`) applied instantly to the paired label text.
 
 ### Input Fields
 - **Search & Add Inputs**: 44px height, `#FFFFFF` background, 1px `#E5E7EB` border, 12px rounded corners, left-aligned utility icon in `#9CA3AF`, text in `#111827`. Focus state triggers a 1.5px `#0F766E` border and subtle mint glow (`0 0 0 3px rgba(204, 251, 241, 0.6)`).
 
 ### Progress Indicators
-- **Category Completion Bar**: Thin 6px track with `#F3F4F6` base and animated `#10B981` fill, capped with rounded endpoints. Accompanied by micro label "14/18 packed" (`label-sm`, `#4B5563`).
+- **Category Completion Bar**: Thin 6px track with `#F3F4F6` base and animated `#0F766E` (primary) fill, capped with rounded endpoints. Accompanied by micro label "14/18 packed" (`label-sm`, `#4B5563`).

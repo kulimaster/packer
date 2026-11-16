@@ -18,7 +18,7 @@ export function Checkbox({ className, ...props }: CheckboxProps) {
     >
       <input
         type="checkbox"
-        className="peer size-[22px] cursor-pointer appearance-none rounded-control border-[1.5px] border-outline-strong bg-card transition-colors checked:border-secondary checked:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
+        className="peer size-[22px] cursor-pointer appearance-none rounded-control border-[1.5px] border-outline-strong bg-card transition-colors checked:border-primary checked:bg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
         {...props}
       />
       <Check
