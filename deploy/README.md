@@ -11,9 +11,12 @@ Connection string do API (mimo git):
 
 ```bash
 dotnet user-secrets set "ConnectionStrings:Default" \
-  "Host=localhost;Port=5432;Database=packer;Username=packer;Password=packer" \
+  "Host=localhost;Port=5442;Database=packer;Username=packer;Password=packer" \
   --project apps/api/src/Packer.Api
 ```
+
+Port 5442 proto, že 5432 na vývojovém stroji často zabírá jiný projekt.
+Uvnitř kontejneru je to pořád standardních 5432.
 
 Zastavení: `podman compose -f deploy/compose.dev.yaml down`
 Smazání dat: `podman volume rm packer-dev_db-data`

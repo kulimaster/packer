@@ -14,9 +14,12 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-packer}
     ports:
       # Jen localhost – databáze nesmí být dostupná ze sítě.
-      - "127.0.0.1:5432:5432"
+      # 5442, protože 5432 často zabírá jiný projekt na stejném stroji.
+      - "127.0.0.1:5442:5432"
     volumes:
-      - db-data:/var/lib/postgresql/data
+      # Postgres 18+ očekává mount na /var/lib/postgresql (ne .../data) – jinak
+      # kontejner odmítne startovat kvůli kontrole major verze.
+      - db-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-packer} -d ${POSTGRES_DB:-packer}"]
       interval: 5s
