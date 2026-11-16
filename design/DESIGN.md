@@ -190,6 +190,7 @@ The shape language conveys safety, modernity, and tactile approachability throug
 - **Primary Button**: Solid `#0F766E` fill, `#FFFFFF` text (`label-lg`), pill-shaped (height 48px), padded horizontally with `space-lg`. On tap/active: darkens to `#115E59`.
 - **Secondary Button**: `#FFFFFF` surface with 1px border in `#E5E7EB`, text `#111827`.
 - **Tertiary / Ghost Button**: No background or border, text `#0F766E`, height 40px, intended for inline contextual actions like "Add Item" or "Select All".
+- **Trip card CTA** ("Continue Packing"): Primary button. Raný mock měl světle mint variantu, ta se ale neukotvila – soutěží s hlavním CTA obrazovky a v systému nemá oporu. Mint (`#CCFBF1`) zůstává pro badge a hover stavy.
 
 ### Cards & Packing Sections
 - **Trip & Category Cards**: `#FFFFFF` background, 16px corner radius, 1px border (`#E5E7EB`), internal padding `space-md` (16px).

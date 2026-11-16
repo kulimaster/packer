@@ -72,9 +72,9 @@ export const UnknownCover: Story = {
   },
 };
 
-/** Světle mint CTA (design) vs. plná primární barva – na porovnání. */
-export const PrimaryAction: Story = {
-  args: { ctaVariant: 'primary' },
+/** Světle mint varianta z původního mocku – na porovnání. */
+export const SoftAction: Story = {
+  args: { ctaVariant: 'soft' },
 };
 
 export const LongText: Story = {

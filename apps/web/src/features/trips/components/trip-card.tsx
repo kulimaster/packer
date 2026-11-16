@@ -39,14 +39,15 @@ type TripCardProps = {
   trip: TripSummary;
   onContinue?: () => void;
   /**
-   * `soft` = světle mint (hlavní CTA obrazovky je jinde), `primary` = plná teal.
-   * Výchozí `soft` odpovídá designu (`design/screens/trips-mobile.png`).
+   * `primary` = plná teal (výchozí, hlavní akce karty), `soft` = světle mint
+   * jako v původním mocku. Mint varianta se v design systému neukotvila,
+   * protože soutěží s hlavním CTA obrazovky.
    */
   ctaVariant?: 'soft' | 'primary';
   className?: string;
 };
 
-export function TripCard({ trip, onContinue, ctaVariant = 'soft', className }: TripCardProps) {
+export function TripCard({ trip, onContinue, ctaVariant = 'primary', className }: TripCardProps) {
   // Vlastní fotka vyhrává; jinak výchozí cover; jinak gradient.
   const imageUrl = trip.imageUrl ?? getCover(trip.coverId)?.file;
 
