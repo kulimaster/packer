@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Infrastructure: implementace portů z Application (EF Core, Identity, e-mail, soubory).
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Packer.Domain\Packer.Domain.csproj" />
+    <ProjectReference Include="..\Packer.Application\Packer.Application.csproj" />
+  </ItemGroup>
+
+</Project>

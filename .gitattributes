@@ -1,0 +1,24 @@
+# Normalize line endings: repo stores LF, Windows checkout may use CRLF.
+* text=auto eol=lf
+
+*.cs      text diff=csharp
+*.csproj  text
+*.sln     text
+*.props   text
+*.md      text
+*.json    text
+*.ts      text
+*.tsx     text
+*.css     text
+*.yml     text
+
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.ico     binary
+*.woff    binary
+*.woff2   binary
+
+# Generated files that should not show up in diffs / reviews
+apps/web/src/lib/api/schema.d.ts linguist-generated=true

@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Packer.Api/Packer.Api.csproj" />
+    <Project Path="src/Packer.Application/Packer.Application.csproj" />
+    <Project Path="src/Packer.Domain/Packer.Domain.csproj" />
+    <Project Path="src/Packer.Infrastructure/Packer.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Packer.Api.IntegrationTests/Packer.Api.IntegrationTests.csproj" />
+    <Project Path="tests/Packer.Domain.Tests/Packer.Domain.Tests.csproj" />
+  </Folder>
+</Solution>

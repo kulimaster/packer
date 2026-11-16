@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API – build & test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Packer.slnx
+
+      - name: Build
+        run: dotnet build Packer.slnx --no-restore -c Release
+
+      - name: Test
+        run: >
+          dotnet test Packer.slnx --no-build -c Release
+          --logger "trx;LogFileName=results.trx"
+          --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-results
+          path: apps/api/TestResults
+          if-no-files-found: ignore
+
+  # Job pro frontend přibude spolu s apps/web:
+  # web:
+  #   runs-on: ubuntu-latest
+  #   defaults: { run: { working-directory: apps/web } }
+  #   steps: checkout → setup-node → npm ci → tsc --noEmit → vitest → build

@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Application: use cases, business pravidla, DTO, porty (rozhraní).
+    Vidí Domain, nesmí vidět EF Core ani ASP.NET.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Packer.Domain\Packer.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

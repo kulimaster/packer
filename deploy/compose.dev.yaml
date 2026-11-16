@@ -1,0 +1,27 @@
+# Lokální vývoj: jen databáze.
+# API i frontend běží nativně na hostiteli – je to rychlejší a hot reload funguje spolehlivě.
+# Spuštění: podman compose -f deploy/compose.dev.yaml up -d
+
+name: packer-dev
+
+services:
+  db:
+    image: docker.io/library/postgres:18-alpine
+    container_name: packer-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-packer}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-packer}
+      POSTGRES_DB: ${POSTGRES_DB:-packer}
+    ports:
+      # Jen localhost – databáze nesmí být dostupná ze sítě.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-packer} -d ${POSTGRES_DB:-packer}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  db-data:
