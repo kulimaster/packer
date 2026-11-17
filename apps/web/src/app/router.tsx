@@ -3,6 +3,7 @@ import { AppShell } from './AppShell';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { TemplatesPage } from '@/pages/TemplatesPage';
+import { TripDetailPage } from '@/pages/TripDetailPage';
 import { TripsPage } from '@/pages/TripsPage';
 
 export const router = createBrowserRouter([
@@ -11,6 +12,7 @@ export const router = createBrowserRouter([
     element: <AppShell />,
     children: [
       { index: true, element: <TripsPage /> },
+      { path: 'trips/:tripId', element: <TripDetailPage /> },
       { path: 'templates', element: <TemplatesPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: '*', element: <NotFoundPage /> },

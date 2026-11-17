@@ -1,0 +1,125 @@
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { ProgressBar } from '@/components/ui/progress-bar';
+import { formatWeight } from '../format';
+import { categoryIcons, type CategoryIconKey } from '../icons';
+import { AddItemForm, type AddItemValues } from './add-item-form';
+import { ItemRow, type PackingItem } from './item-row';
+
+export type PackingCategory = {
+  id: string;
+  name: string;
+  icon: string;
+  note?: string;
+  packed: number;
+  total: number;
+  estimatedWeightGrams: number;
+  items: PackingItem[];
+};
+
+export type CategoryCardProps = {
+  category: PackingCategory;
+  /** Otevřený formulář pro přidání položky – stav drží stránka, aby ho šlo po úspěchu zavřít. */
+  adding?: boolean;
+  onStartAdding?: () => void;
+  onCancelAdding?: () => void;
+  onAddItem?: (values: AddItemValues) => void;
+  addingPending?: boolean;
+  addError?: string | null;
+  addFieldErrors?: Record<string, string[]>;
+  onToggleItem?: (itemId: string, isPacked: boolean) => void;
+  onDeleteItem?: (itemId: string) => void;
+  pendingItemId?: string | null;
+  className?: string;
+};
+
+export function CategoryCard({
+  category,
+  adding = false,
+  onStartAdding,
+  onCancelAdding,
+  onAddItem,
+  addingPending = false,
+  addError,
+  addFieldErrors,
+  onToggleItem,
+  onDeleteItem,
+  pendingItemId,
+  className,
+}: CategoryCardProps) {
+  const Icon = categoryIcons[category.icon as CategoryIconKey] ?? categoryIcons.backpack;
+
+  return (
+    <Card className={className}>
+      <div className="flex items-start gap-3 border-b border-outline px-4 py-4">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-tertiary text-primary">
+          <Icon className="size-5" aria-hidden />
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline justify-between gap-3">
+            <h3 className="truncate text-base font-bold tracking-tight">{category.name}</h3>
+            <span className="shrink-0 text-xs font-semibold tabular-nums text-on-surface-variant">
+              {category.packed} / {category.total}
+            </span>
+          </div>
+
+          {category.note ? (
+            <p className="mt-0.5 truncate text-xs text-on-surface-variant">{category.note}</p>
+          ) : null}
+
+          <ProgressBar
+            className="mt-2"
+            size="sm"
+            value={category.packed}
+            max={category.total > 0 ? category.total : 1}
+          />
+        </div>
+
+        {category.estimatedWeightGrams > 0 ? (
+          <span className="mt-1 shrink-0 text-xs tabular-nums text-on-surface-variant">
+            {formatWeight(category.estimatedWeightGrams)}
+          </span>
+        ) : null}
+      </div>
+
+      {category.items.length > 0 ? (
+        <ul className="divide-y divide-outline px-2 py-1">
+          {category.items.map((item) => (
+            <ItemRow
+              key={item.id}
+              item={item}
+              pending={pendingItemId === item.id}
+              onTogglePacked={
+                onToggleItem ? (isPacked) => onToggleItem(item.id, isPacked) : undefined
+              }
+              onDelete={onDeleteItem ? () => onDeleteItem(item.id) : undefined}
+            />
+          ))}
+        </ul>
+      ) : (
+        <p className="px-4 py-5 text-sm text-on-surface-variant">
+          No items yet – add the first one below.
+        </p>
+      )}
+
+      <div className="px-4 py-3">
+        {adding ? (
+          <AddItemForm
+            onSubmit={(values) => onAddItem?.(values)}
+            onCancel={() => onCancelAdding?.()}
+            pending={addingPending}
+            error={addError}
+            fieldErrors={addFieldErrors}
+          />
+        ) : (
+          <Button variant="ghost" size="sm" onClick={onStartAdding}>
+            <Plus className="size-4" aria-hidden />
+            Add item
+          </Button>
+        )}
+      </div>
+    </Card>
+  );
+}

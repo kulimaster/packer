@@ -1,5 +1,6 @@
 import { LogOut, Plus, Plane } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useCurrentUser, useLogout } from '@/features/auth/api';
@@ -46,6 +47,7 @@ function TripsBoard({ displayName }: { displayName: string }) {
   const trips = useTrips();
   const createTrip = useCreateTrip();
   const logout = useLogout();
+  const navigate = useNavigate();
   const [creating, setCreating] = useState(false);
 
   const handleCreate = (values: CreateTripValues) => {
@@ -133,7 +135,7 @@ function TripsBoard({ displayName }: { displayName: string }) {
         <ul className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {trips.data.map((trip) => (
             <li key={trip.id}>
-              <TripCard trip={toTripCard(trip)} />
+              <TripCard trip={toTripCard(trip)} onContinue={() => navigate(`/trips/${trip.id}`)} />
             </li>
           ))}
         </ul>

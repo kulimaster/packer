@@ -44,13 +44,18 @@ Skript stáhne spec a přepíše `src/lib/api/schema.d.ts`.
 |---|---|---|
 | `GET` | `/api/trips?includeArchived=false` | seznam výletů s počty položek a odvozeným stavem |
 | `POST` | `/api/trips` | založení výletu, `201` + `Location` |
+| `GET` | `/api/trips/{tripId}` | detail výletu: kategorie, položky, bagy, součty |
+| `POST` | `/api/trips/{tripId}/categories` | nová kategorie, `201` |
+| `POST` | `/api/categories/{categoryId}/items` | nová položka v kategorii, `201` |
+| `PATCH` | `/api/items/{itemId}/packed` | přebalení / vrácení položky, `200` |
+| `DELETE` | `/api/items/{itemId}` | smazání položky, `204` |
 | `GET` | `/api/auth/csrf` | antiforgery token |
 | `POST` | `/api/auth/register` | registrace + přihlášení |
 | `POST` | `/api/auth/login` | přihlášení |
 | `POST` | `/api/auth/logout` | odhlášení |
 | `GET` | `/api/auth/me` | aktuální uživatel |
 
-Mutace (`POST`) vyžadují `X-CSRF-TOKEN` i platnou cookie.
+Mutace (`POST`, `PATCH`, `DELETE`) vyžadují `X-CSRF-TOKEN` i platnou cookie.
 
 ## Chybová odpověď
 

@@ -83,6 +83,8 @@ app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 var api = app.MapGroup("/api");
 api.MapAuthEndpoints();
 api.MapTripEndpoints();
+api.MapCategoryEndpoints();
+api.MapItemEndpoints();
 
 app.Run();
 

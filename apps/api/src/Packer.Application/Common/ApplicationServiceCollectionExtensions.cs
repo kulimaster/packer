@@ -1,8 +1,13 @@
 using System.Globalization;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using Packer.Application.Trips.CreateCategory;
+using Packer.Application.Trips.CreateItem;
 using Packer.Application.Trips.CreateTrip;
+using Packer.Application.Trips.DeleteItem;
+using Packer.Application.Trips.GetTrip;
 using Packer.Application.Trips.GetTrips;
+using Packer.Application.Trips.SetItemPacked;
 
 namespace Packer.Application.Common;
 
@@ -19,9 +24,16 @@ public static class ApplicationServiceCollectionExtensions
         ValidatorOptions.Global.LanguageManager.Culture = CultureInfo.GetCultureInfo("en");
 
         services.AddScoped<GetTripsHandler>();
+        services.AddScoped<GetTripHandler>();
         services.AddScoped<CreateTripHandler>();
+        services.AddScoped<CreateCategoryHandler>();
+        services.AddScoped<CreateItemHandler>();
+        services.AddScoped<SetItemPackedHandler>();
+        services.AddScoped<DeleteItemHandler>();
 
         services.AddScoped<IValidator<CreateTripRequest>, CreateTripRequestValidator>();
+        services.AddScoped<IValidator<CreateCategoryRequest>, CreateCategoryRequestValidator>();
+        services.AddScoped<IValidator<CreateItemRequest>, CreateItemRequestValidator>();
 
         return services;
     }

@@ -1,13 +1,11 @@
 import { Calendar, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import type { BadgeTone } from '@/components/ui/badge.variants';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { cn } from '@/lib/cn';
 import { getCover } from '../covers';
-
-export type TripStatus = 'not-started' | 'in-progress' | 'ready';
+import { tripStatusLabel, tripStatusTone, type TripStatus } from '../trip-status';
 
 export type TripSummary = {
   id: string;
@@ -21,18 +19,6 @@ export type TripSummary = {
   coverId?: string;
   /** Vlastní fotka (upload) – má přednost před `coverId`. */
   imageUrl?: string;
-};
-
-const statusLabel: Record<TripStatus, string> = {
-  'not-started': 'Not started',
-  'in-progress': 'In progress',
-  ready: 'Ready to go',
-};
-
-const statusTone: Record<TripStatus, BadgeTone> = {
-  'not-started': 'neutral',
-  'in-progress': 'packed',
-  ready: 'success',
 };
 
 type TripCardProps = {
@@ -63,9 +49,9 @@ export function TripCard({ trip, onContinue, ctaVariant = 'primary', className }
             className="size-full object-cover"
           />
         ) : null}
-        <Badge tone={statusTone[trip.status]} className="absolute top-3 right-3">
+        <Badge tone={tripStatusTone[trip.status]} className="absolute top-3 right-3">
           {trip.status === 'ready' ? '✓ ' : ''}
-          {statusLabel[trip.status]}
+          {tripStatusLabel[trip.status]}
         </Badge>
         {/* Scrim drží název čitelný i na světlé fotce (skála, pláž, sníh). */}
         <div

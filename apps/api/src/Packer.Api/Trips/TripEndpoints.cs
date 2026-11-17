@@ -1,6 +1,7 @@
 using Packer.Api.Common;
 using Packer.Application.Trips;
 using Packer.Application.Trips.CreateTrip;
+using Packer.Application.Trips.GetTrip;
 using Packer.Application.Trips.GetTrips;
 
 namespace Packer.Api.Trips;
@@ -25,6 +26,19 @@ internal static class TripEndpoints
         })
             .Produces<IReadOnlyList<TripSummary>>(StatusCodes.Status200OK)
             .Produces<ApiError>(StatusCodes.Status401Unauthorized);
+
+        group.MapGet("/{tripId:guid}", async (
+            Guid tripId,
+            GetTripHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            var trip = await handler.HandleAsync(tripId, cancellationToken);
+
+            return Results.Ok(trip);
+        })
+            .Produces<TripDetails>(StatusCodes.Status200OK)
+            .Produces<ApiError>(StatusCodes.Status401Unauthorized)
+            .Produces<ApiError>(StatusCodes.Status404NotFound);
 
         group.MapPost("/", async (
             CreateTripRequest request,

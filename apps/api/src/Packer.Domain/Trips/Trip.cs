@@ -130,6 +130,16 @@ public sealed class Trip
         UpdatedAt = now;
     }
 
+    /// <summary>
+    /// Zaznamená změnu uvnitř výletu (kategorie, položka). Drží pořadí v seznamu podle
+    /// naposledy upraveného výletu. Archivovaný výlet se needituje, takže vyhodí stejně jako <see cref="Update"/>.
+    /// </summary>
+    public void Touch(DateTimeOffset now)
+    {
+        EnsureEditable();
+        UpdatedAt = now;
+    }
+
     private void EnsureEditable()
     {
         if (IsArchived)

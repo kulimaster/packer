@@ -128,6 +128,32 @@ public sealed class TripTests
     }
 
     [Fact]
+    public void Touch_BumpsUpdatedAtOnly()
+    {
+        var trip = Trip.Create(Owner, "Asia", null, null, null, null, Now);
+        var later = Now.AddHours(2);
+
+        trip.Touch(later);
+
+        Assert.Equal(later, trip.UpdatedAt);
+        Assert.Equal(Now, trip.CreatedAt);
+        Assert.Equal("Asia", trip.Title);
+    }
+
+    [Fact]
+    public void Touch_OnArchivedTrip_Throws()
+    {
+        var trip = Trip.Create(Owner, "Asia", null, null, null, null, Now);
+        trip.Archive(Now);
+        var archivedAt = trip.UpdatedAt;
+
+        var code = DomainErrors.CodeOf(() => trip.Touch(Now.AddHours(1)));
+
+        Assert.Equal("trip_archived", code);
+        Assert.Equal(archivedAt, trip.UpdatedAt);
+    }
+
+    [Fact]
     public void Unarchive_MakesTripEditableAgain()
     {
         var trip = Trip.Create(Owner, "Asia", null, null, null, null, Now);
