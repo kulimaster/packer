@@ -72,8 +72,12 @@ Prázdný výlet (`total = 0`) není `Ready` – není co balit.
 | `TripId` | `Guid` | |
 | `Name` | `string` | 1–80 ("Peak Design 30L") |
 | `Kind` | `BagKind` | `CarryOn` \| `Checked` \| `Personal` |
-| `AllowanceKg` | `decimal?` | max hmotnost pro tento bag |
+| `AllowanceKg` | `decimal?` | limit dopravce v kg (0–100), ne hmotnost zavazadla |
 | `Position` | `int` | pořadí |
+
+Bag sám o sobě hmotnost nemá – je to jen obal a limit. Hmotnost bagu se počítá z kategorií, které jsou k němu
+přiřazené. Kategorie patří nejvýš do jednoho bagu; smazání bagu kategorie **odpojí** (`BagId = NULL`),
+nikdy je nesmaže.
 
 ### Category
 
@@ -160,14 +164,15 @@ Nikdy se neukládají, počítají se dotazem:
 | `packedCount` / `totalCount` | počet `IsPacked` / všech položek |
 | `percent` | `packedCount / totalCount * 100`, zaokrouhleno dolů |
 | `estimatedWeightGrams` | `Σ (WeightGrams * Quantity)` přes nepřebalené i přebalené |
-| `remainingWeightGrams` | `bag.AllowanceKg * 1000 - estimatedWeightGrams` |
+| `bag.estimatedWeightGrams` | `Σ category.estimatedWeightGrams` přes kategorie s `BagId = bag.Id` |
+| `remainingWeightGrams` | `bag.AllowanceKg * 1000 - bag.estimatedWeightGrams` (může být záporné = přes limit) |
 
 ## v1 vs. později
 
 | v1 | Později |
 |---|---|
 | Účty, každý má své výlety | `TripMember` (owner / editor / viewer) a pozvánky |
-| Bagy a limity hmotnosti | tare weight, rozložení vah mezi bagy, smart suggestions |
+| Bagy a limity hmotnosti | tare weight, smart suggestions pro rozložení vah |
 | Šablony uživatele i systémové | vytvoření šablony z existujícího výletu |
 | – | počasí destinace, travel intel, fotky výletů, realtime sync |
 

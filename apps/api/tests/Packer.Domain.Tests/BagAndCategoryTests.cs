@@ -67,6 +67,38 @@ public sealed class BagAndCategoryTests
     }
 
     [Fact]
+    public void Category_AssignToBag_SetsBag()
+    {
+        var bag = Bag.Create(TripId, "Carry-on", BagKind.CarryOn, null, 0);
+        var category = Category.Create(TripId, null, "Electronics", "laptop", null, null, 0);
+
+        category.AssignToBag(bag.Id);
+
+        Assert.Equal(bag.Id, category.BagId);
+    }
+
+    [Fact]
+    public void Category_AssignToBag_CanDetach()
+    {
+        var bag = Bag.Create(TripId, "Carry-on", BagKind.CarryOn, null, 0);
+        var category = Category.Create(TripId, bag.Id, "Electronics", "laptop", null, null, 0);
+
+        category.AssignToBag(null);
+
+        Assert.Null(category.BagId);
+    }
+
+    [Fact]
+    public void Category_AssignToBag_RejectsEmptyGuid()
+    {
+        var category = Category.Create(TripId, null, "Electronics", "laptop", null, null, 0);
+
+        var code = DomainErrors.CodeOf(() => category.AssignToBag(Guid.Empty));
+
+        Assert.Equal("category_bag_required", code);
+    }
+
+    [Fact]
     public void Category_Create_RejectsTooLongNote()
     {
         var note = new string('n', Category.NoteMaxLength + 1);

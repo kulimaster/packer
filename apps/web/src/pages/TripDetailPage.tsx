@@ -8,13 +8,19 @@ import { ProgressBar } from '@/components/ui/progress-bar';
 import { ApiError } from '@/lib/api/client';
 import {
   formatDateRange,
+  toPackingBag,
   toPackingCategory,
   toTripStatus,
+  useAssignCategoryBag,
+  useCreateBag,
   useCreateCategory,
   useCreateItem,
+  useDeleteBag,
   useDeleteItem,
   useSetItemPacked,
   useTrip,
+  useUpdateBag,
+  type BagInput,
   type TripDetailsDto,
 } from '@/features/trips/api';
 import {
@@ -22,6 +28,8 @@ import {
   type AddCategoryValues,
 } from '@/features/trips/components/add-category-form';
 import type { AddItemValues } from '@/features/trips/components/add-item-form';
+import type { BagValues } from '@/features/trips/components/bag-form';
+import { BagsPanel } from '@/features/trips/components/bags-panel';
 import { CategoryCard } from '@/features/trips/components/category-card';
 import { tripStatusLabel, tripStatusTone } from '@/features/trips/trip-status';
 import { getCover } from '@/features/trips/covers';
@@ -73,10 +81,18 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
   const createItem = useCreateItem(tripId);
   const setPacked = useSetItemPacked(tripId);
   const deleteItem = useDeleteItem(tripId);
+  const createBag = useCreateBag(tripId);
+  const updateBag = useUpdateBag(tripId);
+  const deleteBag = useDeleteBag(tripId);
+  const assignBag = useAssignCategoryBag(tripId);
 
   const [addingCategory, setAddingCategory] = useState(false);
   const [addingItemCategoryId, setAddingItemCategoryId] = useState<string | null>(null);
   const [pendingItemId, setPendingItemId] = useState<string | null>(null);
+  const [addingBag, setAddingBag] = useState(false);
+  const [editingBagId, setEditingBagId] = useState<string | null>(null);
+  const [deletingBagId, setDeletingBagId] = useState<string | null>(null);
+  const [pendingBagCategoryId, setPendingBagCategoryId] = useState<string | null>(null);
 
   const status = toTripStatus(trip.status);
   const packed = Number(trip.packedCount);
@@ -85,6 +101,7 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
   const dateRange = formatDateRange(trip.startDate, trip.endDate);
   const cover = getCover(trip.coverImage ?? undefined);
   const categories = trip.categories.map(toPackingCategory);
+  const bags = trip.bags.map(toPackingBag);
 
   const handleAddCategory = (values: AddCategoryValues) => {
     createCategory.mutate(
@@ -114,6 +131,24 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
   const handleDeleteItem = (itemId: string) => {
     setPendingItemId(itemId);
     deleteItem.mutate(itemId, { onSettled: () => setPendingItemId(null) });
+  };
+
+  const handleCreateBag = (values: BagValues) => {
+    createBag.mutate(toBagInput(values), { onSuccess: () => setAddingBag(false) });
+  };
+
+  const handleUpdateBag = (bagId: string, values: BagValues) => {
+    updateBag.mutate({ bagId, ...toBagInput(values) }, { onSuccess: () => setEditingBagId(null) });
+  };
+
+  const handleDeleteBag = (bagId: string) => {
+    setDeletingBagId(bagId);
+    deleteBag.mutate(bagId, { onSettled: () => setDeletingBagId(null) });
+  };
+
+  const handleAssignBag = (categoryId: string, bagId: string | null) => {
+    setPendingBagCategoryId(categoryId);
+    assignBag.mutate({ categoryId, bagId }, { onSettled: () => setPendingBagCategoryId(null) });
   };
 
   return (
@@ -187,63 +222,100 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
         </div>
       </Card>
 
-      {categories.length > 0 ? (
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
         <div className="space-y-4">
-          {categories.map((category) => (
-            <CategoryCard
-              key={category.id}
-              category={category}
-              adding={addingItemCategoryId === category.id}
-              onStartAdding={() => setAddingItemCategoryId(category.id)}
-              onCancelAdding={() => setAddingItemCategoryId(null)}
-              onAddItem={(values) => handleAddItem(category.id, values)}
-              addingPending={createItem.isPending && addingItemCategoryId === category.id}
-              addError={
-                addingItemCategoryId === category.id ? errorMessage(createItem.error) : null
-              }
-              addFieldErrors={
-                createItem.error instanceof ApiError ? createItem.error.fieldErrors : {}
-              }
-              onToggleItem={handleToggleItem}
-              onDeleteItem={handleDeleteItem}
-              pendingItemId={pendingItemId}
-            />
-          ))}
-        </div>
-      ) : (
-        <Card className="flex flex-col items-center gap-3 px-6 py-12 text-center">
-          <span className="flex size-14 items-center justify-center rounded-full bg-tertiary text-primary">
-            <Backpack className="size-7" aria-hidden />
-          </span>
-          <h2 className="text-lg font-semibold">No categories yet</h2>
-          <p className="max-w-sm text-sm text-on-surface-variant">
-            Rozděl balení na sekce – třeba carry-on, elektroniku a oblečení.
-          </p>
-          <Button onClick={() => setAddingCategory(true)}>
-            <Plus className="size-4" aria-hidden />
-            Add first category
-          </Button>
-        </Card>
-      )}
+          {categories.length > 0 ? (
+            categories.map((category) => (
+              <CategoryCard
+                key={category.id}
+                category={category}
+                bags={bags}
+                onAssignBag={(bagId) => handleAssignBag(category.id, bagId)}
+                bagAssignPending={pendingBagCategoryId === category.id}
+                adding={addingItemCategoryId === category.id}
+                onStartAdding={() => setAddingItemCategoryId(category.id)}
+                onCancelAdding={() => setAddingItemCategoryId(null)}
+                onAddItem={(values) => handleAddItem(category.id, values)}
+                addingPending={createItem.isPending && addingItemCategoryId === category.id}
+                addError={
+                  addingItemCategoryId === category.id ? errorMessage(createItem.error) : null
+                }
+                addFieldErrors={
+                  createItem.error instanceof ApiError ? createItem.error.fieldErrors : {}
+                }
+                onToggleItem={handleToggleItem}
+                onDeleteItem={handleDeleteItem}
+                pendingItemId={pendingItemId}
+              />
+            ))
+          ) : (
+            <Card className="flex flex-col items-center gap-3 px-6 py-12 text-center">
+              <span className="flex size-14 items-center justify-center rounded-full bg-tertiary text-primary">
+                <Backpack className="size-7" aria-hidden />
+              </span>
+              <h2 className="text-lg font-semibold">No categories yet</h2>
+              <p className="max-w-sm text-sm text-on-surface-variant">
+                Rozděl balení na sekce – třeba carry-on, elektroniku a oblečení.
+              </p>
+              <Button onClick={() => setAddingCategory(true)}>
+                <Plus className="size-4" aria-hidden />
+                Add first category
+              </Button>
+            </Card>
+          )}
 
-      {addingCategory ? (
-        <AddCategoryForm
-          onSubmit={handleAddCategory}
-          onCancel={() => setAddingCategory(false)}
-          pending={createCategory.isPending}
-          error={errorMessage(createCategory.error)}
-          fieldErrors={
-            createCategory.error instanceof ApiError ? createCategory.error.fieldErrors : {}
-          }
+          {addingCategory ? (
+            <AddCategoryForm
+              onSubmit={handleAddCategory}
+              onCancel={() => setAddingCategory(false)}
+              pending={createCategory.isPending}
+              error={errorMessage(createCategory.error)}
+              fieldErrors={
+                createCategory.error instanceof ApiError ? createCategory.error.fieldErrors : {}
+              }
+            />
+          ) : categories.length > 0 ? (
+            <Button variant="secondary" onClick={() => setAddingCategory(true)}>
+              <Plus className="size-4" aria-hidden />
+              Add category
+            </Button>
+          ) : null}
+        </div>
+
+        <BagsPanel
+          className="lg:sticky lg:top-6"
+          bags={bags}
+          categories={categories}
+          totalWeightGrams={weight}
+          creating={addingBag}
+          onStartCreating={() => setAddingBag(true)}
+          onCancelCreating={() => setAddingBag(false)}
+          onCreate={handleCreateBag}
+          createPending={createBag.isPending}
+          createError={errorMessage(createBag.error)}
+          createFieldErrors={createBag.error instanceof ApiError ? createBag.error.fieldErrors : {}}
+          editingBagId={editingBagId}
+          onStartEditing={setEditingBagId}
+          onCancelEditing={() => setEditingBagId(null)}
+          onUpdate={handleUpdateBag}
+          updatePending={updateBag.isPending}
+          updateError={errorMessage(updateBag.error)}
+          updateFieldErrors={updateBag.error instanceof ApiError ? updateBag.error.fieldErrors : {}}
+          deletingBagId={deletingBagId}
+          onDelete={handleDeleteBag}
         />
-      ) : categories.length > 0 ? (
-        <Button variant="secondary" onClick={() => setAddingCategory(true)}>
-          <Plus className="size-4" aria-hidden />
-          Add category
-        </Button>
-      ) : null}
+      </div>
     </div>
   );
+}
+
+/** Prázdné pole v formuláři = „bez limitu“, ne nula kilogramů. */
+function toBagInput(values: BagValues): BagInput {
+  return {
+    name: values.name,
+    kind: values.kind,
+    allowanceKg: values.allowanceKg === '' ? null : Number(values.allowanceKg),
+  };
 }
 
 function errorMessage(error: unknown): string | null {

@@ -85,6 +85,7 @@ api.MapAuthEndpoints();
 api.MapTripEndpoints();
 api.MapCategoryEndpoints();
 api.MapItemEndpoints();
+api.MapBagEndpoints();
 
 app.Run();
 

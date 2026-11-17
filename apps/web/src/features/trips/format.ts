@@ -15,3 +15,10 @@ export function formatWeight(grams: number): string {
 
   return `${kilograms} kg`;
 }
+
+const kilograms = new Intl.NumberFormat('en', { maximumFractionDigits: 2 });
+
+/** Limity dopravců se zadávají v kilogramech; nula znamená „bez limitu“. */
+export function formatKilograms(kilogramsValue: number): string {
+  return `${kilograms.format(kilogramsValue)} kg`;
+}

@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { api, toApiError } from '@/lib/api/client';
 import type { components } from '@/lib/api/schema';
+import type { BagKind } from './bag-kind';
+import type { PackingBag } from './components/bag-card';
 import type { PackingCategory } from './components/category-card';
 import type { PackingItem } from './components/item-row';
 import type { TripSummary } from './components/trip-card';
@@ -10,6 +12,7 @@ export type TripDto = components['schemas']['TripSummary'];
 export type TripDetailsDto = components['schemas']['TripDetails'];
 export type CategoryDto = components['schemas']['CategoryDetails'];
 export type ItemDto = components['schemas']['ItemDetails'];
+export type BagDto = components['schemas']['BagDetails'];
 export type CreateTripInput = components['schemas']['CreateTripRequest'];
 
 export const tripKeys = {
@@ -186,6 +189,96 @@ export function useDeleteItem(tripId: string) {
   });
 }
 
+export type BagInput = {
+  name: string;
+  kind: BagKind;
+  allowanceKg: number | null;
+};
+
+export function useCreateBag(tripId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: BagInput): Promise<BagDto> => {
+      const { data, error, response } = await api.POST('/api/trips/{tripId}/bags', {
+        params: { path: { tripId } },
+        body: input,
+      });
+
+      if (!data) {
+        throw toApiError(error, response.status);
+      }
+
+      return data;
+    },
+    onSuccess: () => invalidateTrip(queryClient, tripId),
+  });
+}
+
+export type UpdateBagInput = BagInput & { bagId: string };
+
+export function useUpdateBag(tripId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ bagId, ...input }: UpdateBagInput): Promise<BagDto> => {
+      const { data, error, response } = await api.PUT('/api/bags/{bagId}', {
+        params: { path: { bagId } },
+        body: input,
+      });
+
+      if (!data) {
+        throw toApiError(error, response.status);
+      }
+
+      return data;
+    },
+    onSuccess: () => invalidateTrip(queryClient, tripId),
+  });
+}
+
+export function useDeleteBag(tripId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (bagId: string): Promise<void> => {
+      const { error, response } = await api.DELETE('/api/bags/{bagId}', {
+        params: { path: { bagId } },
+      });
+
+      if (error) {
+        throw toApiError(error, response.status);
+      }
+    },
+    onSuccess: () => invalidateTrip(queryClient, tripId),
+  });
+}
+
+export type AssignCategoryBagInput = {
+  categoryId: string;
+  bagId: string | null;
+};
+
+export function useAssignCategoryBag(tripId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ categoryId, bagId }: AssignCategoryBagInput): Promise<CategoryDto> => {
+      const { data, error, response } = await api.PUT('/api/categories/{categoryId}/bag', {
+        params: { path: { categoryId } },
+        body: { bagId },
+      });
+
+      if (!data) {
+        throw toApiError(error, response.status);
+      }
+
+      return data;
+    },
+    onSuccess: () => invalidateTrip(queryClient, tripId),
+  });
+}
+
 /**
  * API vrací stav jako enum (`InProgress`), karta používá kebab-case. Mapování je tady,
  * ne v komponentě – karta nemá vědět, jak vypadá kontrakt.
@@ -255,9 +348,20 @@ export function toPackingCategory(category: CategoryDto): PackingCategory {
     name: category.name,
     icon: category.icon,
     note: category.note ?? undefined,
+    bagId: category.bagId ?? undefined,
     packed: Number(category.packedCount),
     total: Number(category.totalCount),
     estimatedWeightGrams: Number(category.estimatedWeightGrams),
     items: category.items.map(toPackingItem),
+  };
+}
+
+export function toPackingBag(bag: BagDto): PackingBag {
+  return {
+    id: bag.id,
+    name: bag.name,
+    kind: bag.kind,
+    allowanceKg: bag.allowanceKg === null ? undefined : Number(bag.allowanceKg),
+    estimatedWeightGrams: Number(bag.estimatedWeightGrams),
   };
 }

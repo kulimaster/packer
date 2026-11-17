@@ -48,6 +48,23 @@ const meta = {
   component: CategoryCard,
   args: {
     category: carryOn,
+    bags: [
+      {
+        id: 'bag-1',
+        name: 'Peak Design 45L',
+        kind: 'CarryOn',
+        allowanceKg: 10,
+        estimatedWeightGrams: 4200,
+      },
+      {
+        id: 'bag-2',
+        name: 'Check-in suitcase',
+        kind: 'Checked',
+        allowanceKg: 23,
+        estimatedWeightGrams: 0,
+      },
+    ],
+    onAssignBag: () => undefined,
     onStartAdding: () => undefined,
     onCancelAdding: () => undefined,
     onAddItem: () => undefined,
@@ -68,6 +85,23 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const AssignedToBag: Story = {
+  args: {
+    category: { ...carryOn, bagId: 'bag-1' },
+  },
+};
+
+export const BagAssignPending: Story = {
+  args: {
+    category: { ...carryOn, bagId: 'bag-1' },
+    bagAssignPending: true,
+  },
+};
+
+export const NoBags: Story = {
+  args: { bags: [], onAssignBag: undefined },
+};
 
 export const Empty: Story = {
   args: {

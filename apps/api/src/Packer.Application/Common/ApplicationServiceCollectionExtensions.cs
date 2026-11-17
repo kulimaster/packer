@@ -1,13 +1,17 @@
 using System.Globalization;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using Packer.Application.Trips.AssignCategoryBag;
+using Packer.Application.Trips.CreateBag;
 using Packer.Application.Trips.CreateCategory;
 using Packer.Application.Trips.CreateItem;
 using Packer.Application.Trips.CreateTrip;
+using Packer.Application.Trips.DeleteBag;
 using Packer.Application.Trips.DeleteItem;
 using Packer.Application.Trips.GetTrip;
 using Packer.Application.Trips.GetTrips;
 using Packer.Application.Trips.SetItemPacked;
+using Packer.Application.Trips.UpdateBag;
 
 namespace Packer.Application.Common;
 
@@ -30,10 +34,17 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<CreateItemHandler>();
         services.AddScoped<SetItemPackedHandler>();
         services.AddScoped<DeleteItemHandler>();
+        services.AddScoped<CreateBagHandler>();
+        services.AddScoped<UpdateBagHandler>();
+        services.AddScoped<DeleteBagHandler>();
+        services.AddScoped<AssignCategoryBagHandler>();
 
         services.AddScoped<IValidator<CreateTripRequest>, CreateTripRequestValidator>();
         services.AddScoped<IValidator<CreateCategoryRequest>, CreateCategoryRequestValidator>();
         services.AddScoped<IValidator<CreateItemRequest>, CreateItemRequestValidator>();
+        services.AddScoped<IValidator<CreateBagRequest>, CreateBagRequestValidator>();
+        services.AddScoped<IValidator<UpdateBagRequest>, UpdateBagRequestValidator>();
+        services.AddScoped<IValidator<AssignCategoryBagRequest>, AssignCategoryBagRequestValidator>();
 
         return services;
     }

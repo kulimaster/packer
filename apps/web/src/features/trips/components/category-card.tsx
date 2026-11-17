@@ -2,9 +2,11 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/progress-bar';
+import { Select } from '@/components/ui/select';
 import { formatWeight } from '../format';
 import { categoryIcons, type CategoryIconKey } from '../icons';
 import { AddItemForm, type AddItemValues } from './add-item-form';
+import type { PackingBag } from './bag-card';
 import { ItemRow, type PackingItem } from './item-row';
 
 export type PackingCategory = {
@@ -12,6 +14,8 @@ export type PackingCategory = {
   name: string;
   icon: string;
   note?: string;
+  /** Bag, do kterého kategorie patří; `undefined` = zatím nikam. */
+  bagId?: string;
   packed: number;
   total: number;
   estimatedWeightGrams: number;
@@ -20,6 +24,10 @@ export type PackingCategory = {
 
 export type CategoryCardProps = {
   category: PackingCategory;
+  /** Bagy výletu pro select přiřazení. Prázdné pole select schová. */
+  bags?: PackingBag[];
+  onAssignBag?: (bagId: string | null) => void;
+  bagAssignPending?: boolean;
   /** Otevřený formulář pro přidání položky – stav drží stránka, aby ho šlo po úspěchu zavřít. */
   adding?: boolean;
   onStartAdding?: () => void;
@@ -36,6 +44,9 @@ export type CategoryCardProps = {
 
 export function CategoryCard({
   category,
+  bags = [],
+  onAssignBag,
+  bagAssignPending = false,
   adding = false,
   onStartAdding,
   onCancelAdding,
@@ -75,6 +86,27 @@ export function CategoryCard({
             value={category.packed}
             max={category.total > 0 ? category.total : 1}
           />
+
+          {onAssignBag && bags.length > 0 ? (
+            <div className="mt-2">
+              <Select
+                aria-label={`Bag for ${category.name}`}
+                className="h-8 py-0 text-xs"
+                value={category.bagId ?? ''}
+                disabled={bagAssignPending}
+                onChange={(event) =>
+                  onAssignBag(event.target.value === '' ? null : event.target.value)
+                }
+              >
+                <option value="">No bag</option>
+                {bags.map((bag) => (
+                  <option key={bag.id} value={bag.id}>
+                    {bag.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          ) : null}
         </div>
 
         {category.estimatedWeightGrams > 0 ? (

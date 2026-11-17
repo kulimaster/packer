@@ -49,13 +49,17 @@ Skript stáhne spec a přepíše `src/lib/api/schema.d.ts`.
 | `POST` | `/api/categories/{categoryId}/items` | nová položka v kategorii, `201` |
 | `PATCH` | `/api/items/{itemId}/packed` | přebalení / vrácení položky, `200` |
 | `DELETE` | `/api/items/{itemId}` | smazání položky, `204` |
+| `POST` | `/api/trips/{tripId}/bags` | nový bag, `201` |
+| `PUT` | `/api/bags/{bagId}` | úprava bagu (název, druh, limit), `200` |
+| `DELETE` | `/api/bags/{bagId}` | smazání bagu, kategorie se odpojí, `204` |
+| `PUT` | `/api/categories/{categoryId}/bag` | přiřazení kategorie k bagu, `null` = odebrání, `200` |
 | `GET` | `/api/auth/csrf` | antiforgery token |
 | `POST` | `/api/auth/register` | registrace + přihlášení |
 | `POST` | `/api/auth/login` | přihlášení |
 | `POST` | `/api/auth/logout` | odhlášení |
 | `GET` | `/api/auth/me` | aktuální uživatel |
 
-Mutace (`POST`, `PATCH`, `DELETE`) vyžadují `X-CSRF-TOKEN` i platnou cookie.
+Mutace (`POST`, `PUT`, `PATCH`, `DELETE`) vyžadují `X-CSRF-TOKEN` i platnou cookie.
 
 ## Chybová odpověď
 

@@ -90,6 +90,20 @@ public sealed class Category
         Position = DomainGuard.AtLeast(position, 0, "category_position", nameof(position));
     }
 
+    /// <summary>
+    /// Přiřazení k bagu. <c>null</c> kategorii z bagu odebere. Prázdné Guid by znamenalo
+    /// "bag, který neexistuje", takže se odmítá stejně jako při vytvoření.
+    /// </summary>
+    public void AssignToBag(Guid? bagId)
+    {
+        if (bagId == Guid.Empty)
+        {
+            throw new DomainException("category_bag_required", "BagId must be either null or a real bag.");
+        }
+
+        BagId = bagId;
+    }
+
     private static decimal? ValidateMaxWeight(decimal? maxWeightKg)
     {
         var value = DomainGuard.OptionalNonNegative(maxWeightKg, "category_max_weight", nameof(maxWeightKg));
