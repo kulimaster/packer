@@ -134,7 +134,9 @@ napříč všemi výlety. Kdyby se to změnilo, je to jedna migrace.
 
 ### Template
 
-Znovupoužitelný kit ("Airplane Carry-on", 8 items).
+Znovupoužitelný kit ("Airplane Carry-on", 8 items). Systémové šablony (`OwnerId = null`) seeduje
+`SystemTemplateSeeder` v Infrastructure při startu API – idempotentně podle jména, existující šablony
+nepřepisuje. Vlastní šablony uživatele jdou stejným modelem, jen s vyplněným `OwnerId`.
 
 | Pole | Typ | Poznámka |
 |---|---|---|
@@ -155,7 +157,9 @@ Znovupoužitelný kit ("Airplane Carry-on", 8 items).
 | `Title`, `Note`, `Quantity`, `IsEssential`, `Flags`, `WeightGrams`, `Position` | – | stejné jako `Item` |
 
 **Import šablony do výletu**: pro každou `CategoryName` najdi nebo vytvoř `Category` ve výletu,
-pak vlož `Item`. Duplicity se neřeší (uživatel může mít dvě "Passport" položky) – případný merge je v2.
+pak vlož `Item`. Kategorie se párují podle názvu bez ohledu na velikost písmen; nová kategorie
+dostane ikonu šablony. Duplicity se neřeší (uživatel může mít dvě "Passport" položky) – případný
+merge je v2. Import do archivovaného výletu vrací `409 trip_archived`.
 
 ## Odvozené hodnoty
 
@@ -167,6 +171,8 @@ Nikdy se neukládají, počítají se dotazem:
 | `percent` | `packedCount / totalCount * 100`, zaokrouhleno dolů |
 | `estimatedWeightGrams` | `Σ (WeightGrams * Quantity)` přes nepřebalené i přebalené |
 | `bag.estimatedWeightGrams` | `Σ category.estimatedWeightGrams` přes kategorie s `BagId = bag.Id` |
+| `template.itemCount` | počet `TemplateItem` šablony |
+| `template.estimatedWeightGrams` | `Σ (WeightGrams * Quantity)` přes položky šablony |
 | `remainingWeightGrams` | `bag.AllowanceKg * 1000 - bag.estimatedWeightGrams` (může být záporné = přes limit) |
 
 ## v1 vs. později

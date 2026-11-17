@@ -65,7 +65,7 @@ Primitiva (`src/components/ui/`) – bez business logiky, plně řízená props:
 Kompozitní (`src/features/*/components/`) – skládají primitiva a znají doménu:
 
 `TripCard` · `CoverPicker` · `TripHeader` · `PackingCategory` · `ItemRow` · `ItemCheckbox` · `WeightWidget` ·
-`TemplateCard` · `TemplatePicker` · `TripProgress`
+`TemplateCard` · `TemplateImportPanel` · `TripProgress`
 
 ## Cover fotky
 

@@ -1023,6 +1023,182 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TemplateSummary"][];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/templates/{templateId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    templateId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TemplateDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/{tripId}/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    tripId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ImportTemplatesRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ImportTemplatesResult"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiError"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1109,6 +1285,18 @@ export interface components {
         CsrfTokenResponse: {
             token: string;
         };
+        ImportTemplatesRequest: {
+            templateIds: null | string[];
+        };
+        ImportTemplatesResult: {
+            /** Format: uuid */
+            tripId: string;
+            templateNames: string[];
+            /** Format: int32 */
+            categoriesCreated: number | string;
+            /** Format: int32 */
+            itemsCreated: number | string;
+        };
         ItemDetails: {
             /** Format: uuid */
             id: string;
@@ -1143,6 +1331,47 @@ export interface components {
         };
         SetTripArchivedRequest: {
             isArchived: boolean;
+        };
+        TemplateDetails: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: null | string;
+            icon: string;
+            accent: string;
+            isSystem: boolean;
+            /** Format: int32 */
+            estimatedWeightGrams: number | string;
+            items: components["schemas"]["TemplateItemDetails"][];
+        };
+        TemplateItemDetails: {
+            /** Format: uuid */
+            id: string;
+            categoryName: string;
+            title: string;
+            note: null | string;
+            /** Format: int32 */
+            quantity: number | string;
+            isEssential: boolean;
+            flags: components["schemas"]["ItemTraits"];
+            /** Format: int32 */
+            weightGrams: null | number | string;
+            /** Format: int32 */
+            estimatedWeightGrams: number | string;
+        };
+        TemplateSummary: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: null | string;
+            icon: string;
+            accent: string;
+            isSystem: boolean;
+            /** Format: int32 */
+            itemCount: number | string;
+            /** Format: int32 */
+            estimatedWeightGrams: number | string;
+            categories: string[];
         };
         TripDetails: {
             /** Format: uuid */

@@ -54,6 +54,9 @@ Skript stáhne spec a přepíše `src/lib/api/schema.d.ts`.
 | `PUT` | `/api/bags/{bagId}` | úprava bagu (název, druh, limit), `200` |
 | `DELETE` | `/api/bags/{bagId}` | smazání bagu, kategorie se odpojí, `204` |
 | `PUT` | `/api/categories/{categoryId}/bag` | přiřazení kategorie k bagu, `null` = odebrání, `200` |
+| `GET` | `/api/templates` | knihovna šablon s počty položek a odhadem hmotnosti |
+| `GET` | `/api/templates/{templateId}` | detail šablony s položkami |
+| `POST` | `/api/trips/{tripId}/templates` | import šablon do výletu, `200` s počty vytvořených kategorií a položek |
 | `GET` | `/api/auth/csrf` | antiforgery token |
 | `POST` | `/api/auth/register` | registrace + přihlášení |
 | `POST` | `/api/auth/login` | přihlášení |

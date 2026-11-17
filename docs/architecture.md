@@ -48,14 +48,12 @@ GET /api/trips/{id}
 
 ```
 Packer.Application/
-  Trips/
-    TripSummary.cs
-    CreateTrip/        CreateTripRequest.cs, CreateTripHandler.cs, CreateTripRequestValidator.cs
-    GetTrips/          GetTripsHandler.cs
-    ArchiveTrip/       (zatím chybí)
-  Items/               (zatím chybí)
-  Templates/           (zatím chybí)
-  Common/              IAppDbContext.cs, IClock.cs, ICurrentUser.cs, Exceptions/
+  Trips/           CreateTrip/, GetTrips/, GetTrip/, CreateCategory/, CreateItem/,
+                   SetItemPacked/, DeleteItem/, CreateBag/, UpdateBag/, DeleteBag/,
+                   AssignCategoryBag/, SetTripArchived/, ImportTemplates/,
+                   TripQueries.cs, TripDetails.cs
+  Templates/       GetTemplates/, GetTemplate/
+  Common/          IAppDbContext.cs, IClock.cs, ICurrentUser.cs, Exceptions/
 ```
 
 Feature = složka. Ne `Services/`, ne `Handlers/`. Důvod: když potřebuješ změnit "přidání položky",

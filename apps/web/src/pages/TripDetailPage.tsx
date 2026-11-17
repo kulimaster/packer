@@ -7,6 +7,7 @@ import {
   MapPin,
   Plus,
   Scale,
+  Sparkles,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
@@ -15,6 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { ApiError } from '@/lib/api/client';
+import { toTemplateCard, useImportTemplates, useTemplates } from '@/features/templates/api';
+import { TemplateImportPanel } from '@/features/templates/components/template-import-panel';
 import {
   formatDateRange,
   toPackingBag,
@@ -96,6 +99,8 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
   const deleteBag = useDeleteBag(tripId);
   const assignBag = useAssignCategoryBag(tripId);
   const setArchived = useSetTripArchived(tripId);
+  const templates = useTemplates();
+  const importTemplates = useImportTemplates(tripId);
 
   const [addingCategory, setAddingCategory] = useState(false);
   const [addingItemCategoryId, setAddingItemCategoryId] = useState<string | null>(null);
@@ -104,6 +109,8 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
   const [editingBagId, setEditingBagId] = useState<string | null>(null);
   const [deletingBagId, setDeletingBagId] = useState<string | null>(null);
   const [pendingBagCategoryId, setPendingBagCategoryId] = useState<string | null>(null);
+  const [importingTemplates, setImportingTemplates] = useState(false);
+  const [selectedTemplateIds, setSelectedTemplateIds] = useState<string[]>([]);
 
   const status = toTripStatus(trip.status);
   const packed = Number(trip.packedCount);
@@ -161,6 +168,28 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
   const handleAssignBag = (categoryId: string, bagId: string | null) => {
     setPendingBagCategoryId(categoryId);
     assignBag.mutate({ categoryId, bagId }, { onSettled: () => setPendingBagCategoryId(null) });
+  };
+
+  const openTemplatePicker = () => {
+    setSelectedTemplateIds([]);
+    setImportingTemplates(true);
+  };
+
+  const toggleTemplate = (templateId: string) => {
+    setSelectedTemplateIds((selected) =>
+      selected.includes(templateId)
+        ? selected.filter((id) => id !== templateId)
+        : [...selected, templateId],
+    );
+  };
+
+  const handleImportTemplates = () => {
+    importTemplates.mutate(selectedTemplateIds, {
+      onSuccess: () => {
+        setImportingTemplates(false);
+        setSelectedTemplateIds([]);
+      },
+    });
   };
 
   return (
@@ -265,6 +294,33 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
         <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-display text-lg font-bold tracking-tight">Packing list</h2>
+
+            {!archived && !importingTemplates ? (
+              <Button variant="secondary" size="sm" onClick={openTemplatePicker}>
+                <Sparkles className="size-4" aria-hidden />
+                Add templates
+              </Button>
+            ) : null}
+          </div>
+
+          {!archived && importingTemplates ? (
+            <TemplateImportPanel
+              templates={(templates.data ?? []).map(toTemplateCard)}
+              selectedIds={selectedTemplateIds}
+              onToggle={toggleTemplate}
+              onClose={() => setImportingTemplates(false)}
+              onConfirm={handleImportTemplates}
+              pending={importTemplates.isPending}
+              loading={templates.isPending}
+              error={
+                errorMessage(importTemplates.error) ??
+                (templates.isError ? errorMessage(templates.error) : null)
+              }
+            />
+          ) : null}
+
           {categories.length > 0 ? (
             categories.map((category) => (
               <CategoryCard
@@ -300,10 +356,16 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
                 Rozděl balení na sekce – třeba carry-on, elektroniku a oblečení.
               </p>
               {archived ? null : (
-                <Button onClick={() => setAddingCategory(true)}>
-                  <Plus className="size-4" aria-hidden />
-                  Add first category
-                </Button>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <Button onClick={() => setAddingCategory(true)}>
+                    <Plus className="size-4" aria-hidden />
+                    Add first category
+                  </Button>
+                  <Button variant="secondary" onClick={openTemplatePicker}>
+                    <Sparkles className="size-4" aria-hidden />
+                    Start from a template
+                  </Button>
+                </div>
               )}
             </Card>
           )}

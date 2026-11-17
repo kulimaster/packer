@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Identity;
 using Packer.Api.Auth;
 using Packer.Api.Common;
+using Packer.Api.Templates;
 using Packer.Api.Trips;
 using Packer.Application.Common;
 using Packer.Infrastructure;
@@ -86,6 +87,14 @@ api.MapTripEndpoints();
 api.MapCategoryEndpoints();
 api.MapItemEndpoints();
 api.MapBagEndpoints();
+api.MapTemplateEndpoints();
+
+// Systémové šablony jsou součástí produktu, ne uživatelských dat – seed je idempotentní.
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await SystemTemplateSeeder.SeedAsync(db);
+}
 
 app.Run();
 
