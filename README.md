@@ -7,9 +7,9 @@ zaškrtáváš sbaleno a vidíš, kolik ti zbývá a kolik to váží.
 
 ## Stav
 
-`v1 ve vývoji` – hotový design systém a první end-to-end řez: registrace/přihlášení
-(cookie + CSRF), seznam výletů a založení výletu přes `/api/trips`. Kategorie, položky,
-bagy a šablony jsou v databázi připravené, ale ještě bez endpointů a obrazovek.
+`v1 funkčně hotová` – účty (cookie + CSRF), výlety, kategorie a položky, bagy s váhami,
+archivace i šablony s importem. API má unit i integrační testy, web unit testy; zbývá
+produkční nasazení a polish. Rozsah v1: [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Stack
 
@@ -19,7 +19,7 @@ bagy a šablony jsou v databázi připravené, ale ještě bez endpointů a obra
 | Databáze | PostgreSQL 18 |
 | Frontend | React 19 + TypeScript, Vite, Tailwind CSS 4, TanStack Query, React Router |
 | Komponenty | vlastní design systém + Storybook |
-| Testy | xUnit + Testcontainers (API), Vitest + Playwright (web) |
+| Testy | xUnit (doména + API přes `WebApplicationFactory`), Vitest (web) |
 | Kontejnery | Podman (lokálně i na VPS), Caddy jako reverse proxy |
 | CI/CD | GitHub Actions, image do GHCR |
 
@@ -50,12 +50,13 @@ cd apps/web && npm install && npm run dev
 # 4. Storybook (http://localhost:6006) – katalog komponent
 cd apps/web && npm run storybook
 
-# testy
+# testy (integrační testy API potřebují běžící Postgres)
 dotnet test apps/api/Packer.slnx
 cd apps/web && npm test
 ```
 
 V devu jde `/api` z Vite přes proxy na `http://localhost:5000`, takže žádný CORS.
+Detaily k testovací databázi a pokrytí: [`docs/testing.md`](docs/testing.md).
 
 ## Dokumentace
 
@@ -66,5 +67,6 @@ V devu jde `/api` z Vite přes proxy na `http://localhost:5000`, takže žádný
 | [docs/ui-guidelines.md](docs/ui-guidelines.md) | tokeny, komponenty, Storybook |
 | [docs/api-contract.md](docs/api-contract.md) | OpenAPI a generování TS typů |
 | [docs/roadmap.md](docs/roadmap.md) | co je v v1 a co až potom |
+| [docs/testing.md](docs/testing.md) | testovací projekty, testovací databáze, pokrytí |
 | [docs/adr/](docs/adr/) | záznamy architektonických rozhodnutí |
 | [deploy/README.md](deploy/README.md) | nasazení, zálohy, rollback |

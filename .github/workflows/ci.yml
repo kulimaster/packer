@@ -13,6 +13,23 @@ jobs:
   api:
     name: API – build & test
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: packer
+          POSTGRES_PASSWORD: packer
+          POSTGRES_DB: packer
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U packer -d packer"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      # Integrační testy si databázi packer_tests samy vytvoří a zahodí.
+      PACKER_TEST_DB: Host=localhost;Port=5432;Database=packer_tests;Username=packer;Password=packer
     defaults:
       run:
         working-directory: apps/api
