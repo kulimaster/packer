@@ -72,23 +72,27 @@ export function BagCard({
             </div>
 
             <div className="flex shrink-0 items-center gap-0.5">
-              <IconButton
-                size="sm"
-                aria-label={`Edit ${bag.name}`}
-                onClick={onStartEditing}
-                disabled={editing || deleting}
-              >
-                <Pencil className="size-4" aria-hidden />
-              </IconButton>
-              <IconButton
-                size="sm"
-                aria-label={`Delete ${bag.name}`}
-                onClick={onDelete}
-                disabled={editing || deleting}
-                className="text-danger hover:bg-danger-bg"
-              >
-                <Trash2 className="size-4" aria-hidden />
-              </IconButton>
+              {onStartEditing || onDelete ? (
+                <>
+                  <IconButton
+                    size="sm"
+                    aria-label={`Edit ${bag.name}`}
+                    onClick={onStartEditing}
+                    disabled={editing || deleting}
+                  >
+                    <Pencil className="size-4" aria-hidden />
+                  </IconButton>
+                  <IconButton
+                    size="sm"
+                    aria-label={`Delete ${bag.name}`}
+                    onClick={onDelete}
+                    disabled={editing || deleting}
+                    className="text-danger hover:bg-danger-bg"
+                  >
+                    <Trash2 className="size-4" aria-hidden />
+                  </IconButton>
+                </>
+              ) : null}
             </div>
           </div>
 

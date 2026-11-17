@@ -74,6 +74,11 @@ export const Deleting: Story = {
   args: { deleting: true },
 };
 
+/** Archivovaný výlet: karta bez editačních akcí. */
+export const WithoutActions: Story = {
+  args: { onStartEditing: undefined, onDelete: undefined },
+};
+
 export const LongText: Story = {
   args: {
     bag: {

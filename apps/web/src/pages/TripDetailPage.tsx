@@ -1,4 +1,13 @@
-import { ArrowLeft, Backpack, Calendar, MapPin, Plus, Scale } from 'lucide-react';
+import {
+  Archive,
+  ArchiveRestore,
+  ArrowLeft,
+  Backpack,
+  Calendar,
+  MapPin,
+  Plus,
+  Scale,
+} from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +27,7 @@ import {
   useDeleteBag,
   useDeleteItem,
   useSetItemPacked,
+  useSetTripArchived,
   useTrip,
   useUpdateBag,
   type BagInput,
@@ -85,6 +95,7 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
   const updateBag = useUpdateBag(tripId);
   const deleteBag = useDeleteBag(tripId);
   const assignBag = useAssignCategoryBag(tripId);
+  const setArchived = useSetTripArchived(tripId);
 
   const [addingCategory, setAddingCategory] = useState(false);
   const [addingItemCategoryId, setAddingItemCategoryId] = useState<string | null>(null);
@@ -102,6 +113,7 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
   const cover = getCover(trip.coverImage ?? undefined);
   const categories = trip.categories.map(toPackingCategory);
   const bags = trip.bags.map(toPackingBag);
+  const archived = trip.isArchived;
 
   const handleAddCategory = (values: AddCategoryValues) => {
     createCategory.mutate(
@@ -153,13 +165,42 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
 
   return (
     <div className="space-y-6">
-      <Link
-        to="/"
-        className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        All trips
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
+        >
+          <ArrowLeft className="size-4" aria-hidden />
+          All trips
+        </Link>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setArchived.mutate(!archived)}
+          disabled={setArchived.isPending}
+        >
+          {archived ? (
+            <ArchiveRestore className="size-4" aria-hidden />
+          ) : (
+            <Archive className="size-4" aria-hidden />
+          )}
+          {archived ? 'Restore trip' : 'Archive trip'}
+        </Button>
+      </div>
+
+      {setArchived.error ? (
+        <p role="alert" className="rounded-input bg-danger-bg px-3 py-2 text-sm text-danger-fg">
+          {errorMessage(setArchived.error)}
+        </p>
+      ) : null}
+
+      {archived ? (
+        <div className="flex items-start gap-3 rounded-card border border-outline bg-surface-container px-4 py-3 text-sm text-on-surface-variant">
+          <Archive className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <p>This trip is archived and read-only. Restore it to keep packing.</p>
+        </div>
+      ) : null}
 
       <Card className="overflow-hidden">
         <div className="relative h-40 w-full bg-gradient-to-br from-primary to-secondary sm:h-48">
@@ -232,6 +273,7 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
                 bags={bags}
                 onAssignBag={(bagId) => handleAssignBag(category.id, bagId)}
                 bagAssignPending={pendingBagCategoryId === category.id}
+                readOnly={archived}
                 adding={addingItemCategoryId === category.id}
                 onStartAdding={() => setAddingItemCategoryId(category.id)}
                 onCancelAdding={() => setAddingItemCategoryId(null)}
@@ -243,8 +285,8 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
                 addFieldErrors={
                   createItem.error instanceof ApiError ? createItem.error.fieldErrors : {}
                 }
-                onToggleItem={handleToggleItem}
-                onDeleteItem={handleDeleteItem}
+                onToggleItem={archived ? undefined : handleToggleItem}
+                onDeleteItem={archived ? undefined : handleDeleteItem}
                 pendingItemId={pendingItemId}
               />
             ))
@@ -257,14 +299,16 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
               <p className="max-w-sm text-sm text-on-surface-variant">
                 Rozděl balení na sekce – třeba carry-on, elektroniku a oblečení.
               </p>
-              <Button onClick={() => setAddingCategory(true)}>
-                <Plus className="size-4" aria-hidden />
-                Add first category
-              </Button>
+              {archived ? null : (
+                <Button onClick={() => setAddingCategory(true)}>
+                  <Plus className="size-4" aria-hidden />
+                  Add first category
+                </Button>
+              )}
             </Card>
           )}
 
-          {addingCategory ? (
+          {!archived && addingCategory ? (
             <AddCategoryForm
               onSubmit={handleAddCategory}
               onCancel={() => setAddingCategory(false)}
@@ -274,7 +318,7 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
                 createCategory.error instanceof ApiError ? createCategory.error.fieldErrors : {}
               }
             />
-          ) : categories.length > 0 ? (
+          ) : !archived && categories.length > 0 ? (
             <Button variant="secondary" onClick={() => setAddingCategory(true)}>
               <Plus className="size-4" aria-hidden />
               Add category
@@ -287,6 +331,7 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
           bags={bags}
           categories={categories}
           totalWeightGrams={weight}
+          readOnly={archived}
           creating={addingBag}
           onStartCreating={() => setAddingBag(true)}
           onCancelCreating={() => setAddingBag(false)}

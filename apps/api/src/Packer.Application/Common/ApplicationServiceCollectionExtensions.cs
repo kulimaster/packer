@@ -11,6 +11,7 @@ using Packer.Application.Trips.DeleteItem;
 using Packer.Application.Trips.GetTrip;
 using Packer.Application.Trips.GetTrips;
 using Packer.Application.Trips.SetItemPacked;
+using Packer.Application.Trips.SetTripArchived;
 using Packer.Application.Trips.UpdateBag;
 
 namespace Packer.Application.Common;
@@ -38,6 +39,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<UpdateBagHandler>();
         services.AddScoped<DeleteBagHandler>();
         services.AddScoped<AssignCategoryBagHandler>();
+        services.AddScoped<SetTripArchivedHandler>();
 
         services.AddScoped<IValidator<CreateTripRequest>, CreateTripRequestValidator>();
         services.AddScoped<IValidator<CreateCategoryRequest>, CreateCategoryRequestValidator>();

@@ -3,6 +3,7 @@ using Packer.Application.Trips;
 using Packer.Application.Trips.CreateTrip;
 using Packer.Application.Trips.GetTrip;
 using Packer.Application.Trips.GetTrips;
+using Packer.Application.Trips.SetTripArchived;
 
 namespace Packer.Api.Trips;
 
@@ -52,6 +53,21 @@ internal static class TripEndpoints
             .Produces<TripSummary>(StatusCodes.Status201Created)
             .Produces<ApiError>(StatusCodes.Status400BadRequest)
             .Produces<ApiError>(StatusCodes.Status401Unauthorized)
+            .AddEndpointFilter<AntiforgeryFilter>();
+
+        group.MapPatch("/{tripId:guid}/archived", async (
+            Guid tripId,
+            SetTripArchivedRequest request,
+            SetTripArchivedHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            await handler.HandleAsync(tripId, request.IsArchived, cancellationToken);
+
+            return Results.NoContent();
+        })
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces<ApiError>(StatusCodes.Status401Unauthorized)
+            .Produces<ApiError>(StatusCodes.Status404NotFound)
             .AddEndpointFilter<AntiforgeryFilter>();
 
         return app;

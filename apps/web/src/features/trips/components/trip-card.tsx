@@ -87,7 +87,7 @@ export function TripCard({ trip, onContinue, ctaVariant = 'primary', className }
         />
 
         <Button variant={ctaVariant} fullWidth onClick={onContinue}>
-          Continue Packing
+          {trip.status === 'archived' ? 'Review packing' : 'Continue Packing'}
         </Button>
       </div>
     </Card>

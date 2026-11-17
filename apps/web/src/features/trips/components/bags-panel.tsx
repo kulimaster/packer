@@ -10,6 +10,8 @@ export type BagsPanelProps = {
   /** Kategorie výletu – z nich panel skládá seznam přiřazených názvů k bagu. */
   categories: { id: string; name: string; bagId?: string }[];
   totalWeightGrams: number;
+  /** Archivovaný výlet je jen ke čtení – skryjí se všechny mutace. */
+  readOnly?: boolean;
   creating: boolean;
   onStartCreating: () => void;
   onCancelCreating: () => void;
@@ -37,6 +39,7 @@ export function BagsPanel({
   bags,
   categories,
   totalWeightGrams,
+  readOnly = false,
   creating,
   onStartCreating,
   onCancelCreating,
@@ -68,7 +71,7 @@ export function BagsPanel({
           </p>
         </div>
 
-        {bags.length > 0 && !creating ? (
+        {bags.length > 0 && !creating && !readOnly ? (
           <Button variant="secondary" size="sm" onClick={onStartCreating}>
             <Plus className="size-4" aria-hidden />
             Add bag
@@ -85,14 +88,14 @@ export function BagsPanel({
                 categoryNames={categories
                   .filter((category) => category.bagId === bag.id)
                   .map((category) => category.name)}
-                editing={editingBagId === bag.id}
-                onStartEditing={() => onStartEditing(bag.id)}
+                editing={!readOnly && editingBagId === bag.id}
+                onStartEditing={readOnly ? undefined : () => onStartEditing(bag.id)}
                 onCancelEditing={onCancelEditing}
                 onSubmit={(values) => onUpdate(bag.id, values)}
                 updatePending={updatePending && editingBagId === bag.id}
                 updateError={editingBagId === bag.id ? updateError : null}
                 updateFieldErrors={editingBagId === bag.id ? updateFieldErrors : {}}
-                onDelete={() => onDelete(bag.id)}
+                onDelete={readOnly ? undefined : () => onDelete(bag.id)}
                 deleting={deletingBagId === bag.id}
               />
             </li>
@@ -100,7 +103,7 @@ export function BagsPanel({
         </ul>
       ) : null}
 
-      {creating ? (
+      {creating && !readOnly ? (
         <Card className="mt-3 p-3">
           <BagForm
             mode="create"
@@ -118,12 +121,16 @@ export function BagsPanel({
           </span>
           <h3 className="text-sm font-semibold">No bags yet</h3>
           <p className="text-xs text-on-surface-variant">
-            Add a bag and split the weight across carry-on and checked luggage.
+            {readOnly
+              ? 'This trip has no bags.'
+              : 'Add a bag and split the weight across carry-on and checked luggage.'}
           </p>
-          <Button size="sm" onClick={onStartCreating}>
-            <Plus className="size-4" aria-hidden />
-            Add first bag
-          </Button>
+          {readOnly ? null : (
+            <Button size="sm" onClick={onStartCreating}>
+              <Plus className="size-4" aria-hidden />
+              Add first bag
+            </Button>
+          )}
         </Card>
       ) : null}
     </section>

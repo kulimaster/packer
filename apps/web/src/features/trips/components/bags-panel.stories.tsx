@@ -97,6 +97,14 @@ export const Deleting: Story = {
   args: { deletingBagId: 'bag-2' },
 };
 
+export const ReadOnly: Story = {
+  args: { readOnly: true },
+};
+
+export const ReadOnlyEmpty: Story = {
+  args: { readOnly: true, bags: [], totalWeightGrams: 0 },
+};
+
 export const LongText: Story = {
   args: {
     bags: [

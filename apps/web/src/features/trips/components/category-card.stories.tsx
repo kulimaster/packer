@@ -103,6 +103,10 @@ export const NoBags: Story = {
   args: { bags: [], onAssignBag: undefined },
 };
 
+export const ReadOnly: Story = {
+  args: { readOnly: true, category: { ...carryOn, bagId: 'bag-1' } },
+};
+
 export const Empty: Story = {
   args: {
     category: { ...carryOn, packed: 0, total: 0, estimatedWeightGrams: 0, items: [] },

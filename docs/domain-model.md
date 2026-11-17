@@ -63,6 +63,8 @@ a Identity zůstane implementační detail.
 Proč odvozený: uložený stav by se musel přepočítávat při každé změně položky a dřív nebo později by lhal.
 Archivace má přednost: výlet, který je celý sbalený a zároveň archivovaný, je `Archived`, ne `Ready`.
 Prázdný výlet (`total = 0`) není `Ready` – není co balit.
+Archivovaný výlet je jen ke čtení: mutace kategorií, položek i bagů vrací `409 trip_archived`.
+Jediná povolená změna je obnovení (`Unarchive`).
 
 ### Bag
 

@@ -28,6 +28,8 @@ export type CategoryCardProps = {
   bags?: PackingBag[];
   onAssignBag?: (bagId: string | null) => void;
   bagAssignPending?: boolean;
+  /** Archivovaný výlet je jen ke čtení – skryjí se všechny mutace. */
+  readOnly?: boolean;
   /** Otevřený formulář pro přidání položky – stav drží stránka, aby ho šlo po úspěchu zavřít. */
   adding?: boolean;
   onStartAdding?: () => void;
@@ -47,6 +49,7 @@ export function CategoryCard({
   bags = [],
   onAssignBag,
   bagAssignPending = false,
+  readOnly = false,
   adding = false,
   onStartAdding,
   onCancelAdding,
@@ -87,7 +90,7 @@ export function CategoryCard({
             max={category.total > 0 ? category.total : 1}
           />
 
-          {onAssignBag && bags.length > 0 ? (
+          {!readOnly && onAssignBag && bags.length > 0 ? (
             <div className="mt-2">
               <Select
                 aria-label={`Bag for ${category.name}`}
@@ -136,22 +139,24 @@ export function CategoryCard({
         </p>
       )}
 
-      <div className="px-4 py-3">
-        {adding ? (
-          <AddItemForm
-            onSubmit={(values) => onAddItem?.(values)}
-            onCancel={() => onCancelAdding?.()}
-            pending={addingPending}
-            error={addError}
-            fieldErrors={addFieldErrors}
-          />
-        ) : (
-          <Button variant="ghost" size="sm" onClick={onStartAdding}>
-            <Plus className="size-4" aria-hidden />
-            Add item
-          </Button>
-        )}
-      </div>
+      {readOnly ? null : (
+        <div className="px-4 py-3">
+          {adding ? (
+            <AddItemForm
+              onSubmit={(values) => onAddItem?.(values)}
+              onCancel={() => onCancelAdding?.()}
+              pending={addingPending}
+              error={addError}
+              fieldErrors={addFieldErrors}
+            />
+          ) : (
+            <Button variant="ghost" size="sm" onClick={onStartAdding}>
+              <Plus className="size-4" aria-hidden />
+              Add item
+            </Button>
+          )}
+        </div>
+      )}
     </Card>
   );
 }

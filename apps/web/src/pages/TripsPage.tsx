@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Chip } from '@/components/ui/chip';
 import { useCurrentUser, useLogout } from '@/features/auth/api';
 import { AuthPanel } from '@/features/auth/components/auth-panel';
 import { toTripCard, useCreateTrip, useTrips } from '@/features/trips/api';
@@ -44,7 +45,8 @@ export function TripsPage() {
 }
 
 function TripsBoard({ displayName }: { displayName: string }) {
-  const trips = useTrips();
+  const [includeArchived, setIncludeArchived] = useState(false);
+  const trips = useTrips(includeArchived);
   const createTrip = useCreateTrip();
   const logout = useLogout();
   const navigate = useNavigate();
@@ -103,6 +105,15 @@ function TripsBoard({ displayName }: { displayName: string }) {
         />
       ) : null}
 
+      <div className="flex flex-wrap items-center gap-2">
+        <Chip selected={!includeArchived} onClick={() => setIncludeArchived(false)}>
+          Active
+        </Chip>
+        <Chip selected={includeArchived} onClick={() => setIncludeArchived(true)}>
+          Include archived
+        </Chip>
+      </div>
+
       {trips.isPending ? <TripsLoading /> : null}
 
       {trips.isError ? (
@@ -120,14 +131,20 @@ function TripsBoard({ displayName }: { displayName: string }) {
           <span className="flex size-14 items-center justify-center rounded-full bg-tertiary text-primary">
             <Plane className="size-7" aria-hidden />
           </span>
-          <h2 className="text-lg font-semibold">Zatím žádné výlety</h2>
+          <h2 className="text-lg font-semibold">
+            {includeArchived ? 'No trips at all' : 'Zatím žádné výlety'}
+          </h2>
           <p className="max-w-sm text-sm text-on-surface-variant">
-            Založ první výlet – kategorie a položky přidáš v jeho detailu.
+            {includeArchived
+              ? 'Archivované výlety se tu objeví, jakmile nějaký archivuješ.'
+              : 'Založ první výlet – kategorie a položky přidáš v jeho detailu.'}
           </p>
-          <Button onClick={() => setCreating(true)}>
-            <Plus className="size-4" aria-hidden />
-            Plan your first trip
-          </Button>
+          {!includeArchived ? (
+            <Button onClick={() => setCreating(true)}>
+              <Plus className="size-4" aria-hidden />
+              Plan your first trip
+            </Button>
+          ) : null}
         </Card>
       ) : null}
 

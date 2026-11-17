@@ -17,21 +17,22 @@ export type CreateTripInput = components['schemas']['CreateTripRequest'];
 
 export const tripKeys = {
   active: ['trips', { includeArchived: false }] as const,
+  list: (includeArchived: boolean) => ['trips', { includeArchived }] as const,
   detail: (tripId: string) => ['trips', tripId] as const,
 };
 
 /** Detail i seznam se mění společně – počet přebalených položek je na kartě výletu. */
 function invalidateTrip(queryClient: QueryClient, tripId: string) {
   void queryClient.invalidateQueries({ queryKey: tripKeys.detail(tripId) });
-  void queryClient.invalidateQueries({ queryKey: tripKeys.active });
+  void queryClient.invalidateQueries({ queryKey: ['trips'] });
 }
 
-export function useTrips() {
+export function useTrips(includeArchived = false) {
   return useQuery({
-    queryKey: tripKeys.active,
+    queryKey: tripKeys.list(includeArchived),
     queryFn: async (): Promise<TripDto[]> => {
       const { data, error, response } = await api.GET('/api/trips', {
-        params: { query: { includeArchived: false } },
+        params: { query: { includeArchived } },
       });
 
       if (!data) {
@@ -274,6 +275,24 @@ export function useAssignCategoryBag(tripId: string) {
       }
 
       return data;
+    },
+    onSuccess: () => invalidateTrip(queryClient, tripId),
+  });
+}
+
+export function useSetTripArchived(tripId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (isArchived: boolean): Promise<void> => {
+      const { error, response } = await api.PATCH('/api/trips/{tripId}/archived', {
+        params: { path: { tripId } },
+        body: { isArchived },
+      });
+
+      if (error) {
+        throw toApiError(error, response.status);
+      }
     },
     onSuccess: () => invalidateTrip(queryClient, tripId),
   });

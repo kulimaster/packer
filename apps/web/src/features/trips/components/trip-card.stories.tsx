@@ -77,6 +77,13 @@ export const SoftAction: Story = {
   args: { ctaVariant: 'soft' },
 };
 
+/** Archivovaný výlet zůstává dostupný, jen s jiným CTA. */
+export const Archived: Story = {
+  args: {
+    trip: { ...asiaTrip, packed: 40, total: 40, status: 'archived' },
+  },
+};
+
 export const LongText: Story = {
   args: {
     trip: {
