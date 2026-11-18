@@ -78,7 +78,8 @@ vidíš všechny související soubory na jednom místě.
 
 - `appsettings.json` = výchozí hodnoty bez secretů.
 - Lokálně: `dotnet user-secrets set "ConnectionStrings:Default" "..."`.
-- Produkce: proměnné prostředí z `deploy/.env` (mimo git).
+- Produkce: proměnné prostředí z `~/.config/containers/systemd/packer.env` na serveru (mimo git).
+  Detaily: [`deploy/README.md`](../deploy/README.md).
 - Validace konfigurace při startu (fail fast), ne až u prvního requestu.
 
 ## Co záměrně není v v1

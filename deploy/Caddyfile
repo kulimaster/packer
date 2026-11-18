@@ -1,0 +1,58 @@
+# Caddy pro produkci: TLS, statický build frontendu a proxy na API.
+#
+# Doména i e-mail pro Let's Encrypt jdou z prostředí (Quadlet: EnvironmentFile).
+# Bez PACKER_DOMAIN nebo PACKER_ACME_EMAIL Caddy odmítne startovat – radši
+# viditelná chyba než web omylem na localhostu nebo bez kontaktu pro ACME.
+{
+	admin off
+	email {$PACKER_ACME_EMAIL}
+}
+
+{$PACKER_DOMAIN} {
+	encode zstd gzip
+
+	root * /srv
+
+	# API i health jsou same-origin, takže prohlížeč nepotřebuje CORS.
+	handle /api/* {
+		reverse_proxy packer-api:8080
+	}
+
+	handle /health {
+		reverse_proxy packer-api:8080
+	}
+
+	# Vite dává assetům hash v názvu – jiný obsah má jiný název, proto immutable.
+	handle /assets/* {
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	# Cover fotky jsou neměnné, ale bez hashe v názvu – denní cache stačí.
+	handle /covers/* {
+		header Cache-Control "public, max-age=86400"
+		file_server
+	}
+
+	# SPA: cesty řeší React Router. Neexistující soubor → index.html.
+	# Bez cache, jinak by lidé po nasazení zůstali na staré verzi.
+	handle {
+		header Cache-Control "no-store"
+		try_files {path} /index.html
+		file_server
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options DENY
+		-Server
+	}
+
+	# Ani odpovědi API se nesmí cachovat. ">" = přepiš i hlavičku, kterou
+	# nastavilo ASP.NET, ať se neposílají dvě různé hodnoty.
+	header /api/* >Cache-Control "no-store"
+
+	log
+}

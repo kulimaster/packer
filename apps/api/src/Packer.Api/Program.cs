@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Packer.Api.Auth;
 using Packer.Api.Common;
@@ -67,8 +69,29 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
 
+// V produkci stojí před API Caddy: dovnitř jde HTTP, ven HTTPS. Bez tohohle by
+// si API myslelo, že požadavek není HTTPS, a autentizační cookie by neměla Secure.
+// Jediný, kdo se na API může připojit, je proxy v interní síti – proto se jí věří.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.ForwardLimit = 1;
+    options.KnownProxies.Clear();
+    options.KnownIPNetworks.Clear();
+});
+
+// Klíče pro šifrování cookie musí přežít restart kontejneru, jinak by se po každém
+// nasazení všichni odhlásili. V devu se cesta nekonfiguruje a použije se výchozí.
+if (builder.Configuration["DataProtection:KeysPath"] is { Length: > 0 } keysPath)
+{
+    builder.Services
+        .AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+}
+
 var app = builder.Build();
 
+app.UseForwardedHeaders();
 app.UseErrorHandling();
 
 if (app.Environment.IsDevelopment())

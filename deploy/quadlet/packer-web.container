@@ -1,0 +1,33 @@
+[Unit]
+Description=Packer – web (Caddy: TLS + statický build + /api proxy)
+Documentation=file:///srv/packer/deploy/README.md
+
+Requires=packer-network.service
+After=packer-network.service packer-api.service
+Wants=packer-api.service
+
+[Container]
+ContainerName=packer-web
+# @SHA@ nahrazuje deploy.sh tagem commitu (viz packer-api.container).
+Image=ghcr.io/kulimaster/packer-web:@SHA@
+Network=packer.network
+NetworkAlias=packer-web
+# PACKER_DOMAIN a PACKER_ACME_EMAIL pro Caddyfile.
+EnvironmentFile=packer.env
+
+# Rootless Podman umí porty < 1024 jen s net.ipv4.ip_unprivileged_port_start=80
+# (viz README, sekce Produkce).
+PublishPort=80:80
+PublishPort=443:443
+# HTTP/3.
+PublishPort=443:443/udp
+
+Volume=packer-caddy-data.volume:/data
+Volume=packer-caddy-config.volume:/config
+
+[Service]
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

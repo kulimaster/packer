@@ -1,0 +1,31 @@
+[Unit]
+Description=Packer – PostgreSQL
+Documentation=file:///srv/packer/deploy/README.md
+
+Requires=packer-network.service
+After=packer-network.service
+
+[Container]
+ContainerName=packer-db
+Image=docker.io/library/postgres:18-alpine
+Network=packer.network
+# DNS jméno v síti musí být "packer-db" (API ho má v connection stringu).
+NetworkAlias=packer-db
+# POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB – viz packer.env.example.
+EnvironmentFile=packer.env
+# Postgres 18 očekává mount na /var/lib/postgresql (ne .../data).
+Volume=packer-db-data.volume:/var/lib/postgresql
+
+# pg_isready bez argumentů stačí: zajímá nás, jestli server přijímá spojení.
+# (Uživatel i databáze by v HealthCmd musely být kvůli $$ escapování systemd.)
+HealthCmd=pg_isready
+HealthInterval=10s
+HealthRetries=5
+HealthStartPeriod=15s
+
+[Service]
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=default.target

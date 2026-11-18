@@ -38,6 +38,9 @@ Caddy (TLS, statický build, /api → proxy)
 - Veškerý ops je na vývojáři: update OS, TLS (řeší Caddy), zálohy, monitoring.
 - Rootless Podman nemůže bindovat 80/443 bez `sysctl net.ipv4.ip_unprivileged_port_start=80`.
 - `podman compose` je tenčí než `docker compose` – proto na serveru Quadlet, ne compose.
+- Quadlet neumí v `Image=` číst proměnné prostředí. Tag commitu proto doplňuje
+  `deploy/deploy.sh` při generování units (v repu je placeholder `@SHA@`),
+  místo aby se tag tahal z `.env` až za běhu.
 
 ## Pravidla pro produkci
 

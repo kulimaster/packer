@@ -1,0 +1,6 @@
+[Unit]
+Description=Packer – Caddy konfigurace
+
+# Autosave stav Caddy (aktivní certifikáty). Musí být persistentní ze stejného důvodu jako data.
+[Volume]
+VolumeName=packer-caddy-config

@@ -17,7 +17,7 @@
 | Routování | React Router |
 | Komponenty | vlastní design systém + Storybook |
 | Validace | FluentValidation (BE), Zod (FE) |
-| Testy | xUnit + Testcontainers, Vitest + Playwright |
+| Testy | xUnit (doména) + `WebApplicationFactory` nad reálným Postgresem (API), Vitest (web). Playwright E2E až po v1 |
 | Kontejnery | Podman |
 
 ## Důsledky

@@ -1,0 +1,6 @@
+[Unit]
+Description=Packer – data PostgreSQL
+
+# VolumeName bez "systemd-" prefixu, ať je `podman volume ls` čitelný.
+[Volume]
+VolumeName=packer-db-data

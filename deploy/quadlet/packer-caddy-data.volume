@@ -1,0 +1,6 @@
+[Unit]
+Description=Packer – Caddy data (TLS certifikáty, OCSP)
+
+# Certifikáty musí přežít restart, jinak by Caddy žádal o nové a narazil na limity Let's Encrypt.
+[Volume]
+VolumeName=packer-caddy-data

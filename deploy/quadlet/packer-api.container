@@ -1,0 +1,37 @@
+[Unit]
+Description=Packer – API
+Documentation=file:///srv/packer/deploy/README.md
+
+Requires=packer-network.service
+After=packer-network.service packer-db.service
+# Databáze se startuje první, ale "healthy" systémd nehlídá. Když API startuje
+# dřív než DB, seed šablon spadne a služba se zopakuje (viz Restart=always níže).
+Wants=packer-db.service
+
+[Container]
+ContainerName=packer-api
+# @SHA@ nahrazuje deploy.sh tagem commitu. Quadlet v Image= neumí číst
+# proměnné prostředí, proto se jednotka při nasazení generuje.
+Image=ghcr.io/kulimaster/packer-api:@SHA@
+Network=packer.network
+NetworkAlias=packer-api
+EnvironmentFile=packer.env
+
+# Port je jen interní, ven ho nevystavujeme – přístup jde přes Caddy.
+Environment=ASPNETCORE_HTTP_PORTS=8080
+
+# Klíče pro šifrování auth cookie přežijí restart i nový image.
+Environment=DataProtection__KeysPath=/var/lib/packer/keys
+Volume=packer-dp-keys.volume:/var/lib/packer/keys
+
+HealthCmd=curl -fsS http://127.0.0.1:8080/health
+HealthInterval=15s
+HealthRetries=5
+HealthStartPeriod=30s
+
+[Service]
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=default.target

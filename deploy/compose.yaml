@@ -1,0 +1,78 @@
+# Smoke test produkčních image na jednom stroji.
+#
+# NENÍ to produkční orchestrace – na VPS běží Quadlet (viz deploy/quadlet/).
+# Slouží k tomu, aby šlo ověřit, že se image postaví a že mluví s databází,
+# než se pošle na server.
+#
+#   podman compose -f deploy/compose.yaml up --build
+#   open http://localhost:8080
+#
+# Vyžaduje compose s podmínkami závislostí (podman-compose >= 1.2, Podman 5+).
+
+name: packer-prod
+
+services:
+  db:
+    image: docker.io/library/postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-packer}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-packer}
+      POSTGRES_DB: ${POSTGRES_DB:-packer}
+    volumes:
+      # Postgres 18 očekává mount na /var/lib/postgresql (ne .../data).
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Migrace jako jednorázový krok před startem API – stejný image, jiný entrypoint.
+  migrate:
+    build:
+      context: ..
+      dockerfile: deploy/Containerfile.api
+    image: packer-api:smoke
+    entrypoint: ["/app/efbundle"]
+    environment:
+      ConnectionStrings__Default: >-
+        Host=db;Port=5432;Database=${POSTGRES_DB:-packer};Username=${POSTGRES_USER:-packer};Password=${POSTGRES_PASSWORD:-packer}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    image: packer-api:smoke
+    environment:
+      ConnectionStrings__Default: >-
+        Host=db;Port=5432;Database=${POSTGRES_DB:-packer};Username=${POSTGRES_USER:-packer};Password=${POSTGRES_PASSWORD:-packer}
+      ASPNETCORE_HTTP_PORTS: 8080
+      # Bez persistentních klíčů by se po každém restartu odhlásili všichni.
+      DataProtection__KeysPath: /var/lib/packer/keys
+    volumes:
+      # Vlastnictví řeší image (adresář patří APP_UID), volume ho při prvním
+      # připojení převezme. Bez toho by ne-root API nemohlo zapisovat klíče.
+      - dp-keys:/var/lib/packer/keys
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Containerfile.web
+    image: packer-web:smoke
+    environment:
+      # ":80" = prosté HTTP bez TLS, ať se to dá otevřít na localhostu.
+      PACKER_DOMAIN: ":80"
+      # Caddyfile čte i e-mail; bez hodnoty by se nenačetl (i když se TLS nepoužije).
+      PACKER_ACME_EMAIL: "smoke@example.invalid"
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  db-data:
+  dp-keys:

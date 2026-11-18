@@ -1,0 +1,84 @@
+# syntax=docker/dockerfile:1
+
+# Produkční image API. Jeden obraz nese i migrační bundle, takže nasazení
+# nepotřebuje druhý image ani .NET SDK na serveru:
+#   podman run --rm --entrypoint /app/efbundle <image>
+#
+# Build context je kořen repa (viz deploy/compose.yaml a CI), ne apps/api –
+# Containerfile potřebuje i .editorconfig a strukturu apps/api.
+#
+# global.json se záměrně nekopíruje: pinuje SDK 10.0.403 a kdyby base image
+# měla jinou feature band, build by spadl na rollForward. Verzi SDK určuje tag
+# base image, který držíme v ARG.
+
+ARG DOTNET_VERSION=10.0
+
+# --- 1) dotnet-ef jen kvůli migračnímu bundlu (do runtime se nedostane) ---
+FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS tools
+RUN dotnet tool install --global dotnet-ef --version "10.*"
+
+# --- 2) restore + publish + bundle ---
+FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build
+WORKDIR /src
+
+# Nejdřív jen projektové soubory: změna kódu pak nezahodí cache restore.
+COPY .editorconfig ./
+COPY apps/api/Directory.Build.props apps/api/Directory.Packages.props apps/api/
+COPY apps/api/src/Packer.Domain/Packer.Domain.csproj apps/api/src/Packer.Domain/
+COPY apps/api/src/Packer.Application/Packer.Application.csproj apps/api/src/Packer.Application/
+COPY apps/api/src/Packer.Infrastructure/Packer.Infrastructure.csproj apps/api/src/Packer.Infrastructure/
+COPY apps/api/src/Packer.Api/Packer.Api.csproj apps/api/src/Packer.Api/
+RUN dotnet restore apps/api/src/Packer.Api/Packer.Api.csproj
+
+COPY apps/api/src apps/api/src
+
+# RID restore předem: migrační bundle se publikuje pro linux-x64 a bez něj
+# by chyběl target net10.0/linux-x64 v project.assets.json.
+RUN dotnet restore apps/api/src/Packer.Api/Packer.Api.csproj --runtime linux-x64
+
+RUN dotnet publish apps/api/src/Packer.Api/Packer.Api.csproj \
+      --configuration Release \
+      --output /app/publish \
+      --no-restore
+
+# Design-time host (Program.cs) vyžaduje connection string, i když se bundle
+# nikdy nepřipojí – jen z modelu vygeneruje migrační skripty.
+COPY --from=tools /root/.dotnet/tools /root/.dotnet/tools
+ENV PATH="$PATH:/root/.dotnet/tools"
+ENV ConnectionStrings__Default="Host=design-time;Database=packer;Username=packer;Password=design-time"
+RUN dotnet ef migrations bundle \
+      --project apps/api/src/Packer.Infrastructure \
+      --startup-project apps/api/src/Packer.Api \
+      --runtime linux-x64 \
+      --self-contained \
+      --output /app/efbundle
+
+# --- 3) runtime ---
+FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION} AS runtime
+WORKDIR /app
+
+# curl pro HEALTHCHECK – aspnet image ho nemá.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /app/publish ./
+COPY --from=build /app/efbundle ./efbundle
+
+# HTTP dovnitř, TLS řeší Caddy. Port je jen interní, nepočítá se s ním ven.
+ENV ASPNETCORE_HTTP_PORTS=8080
+EXPOSE 8080
+
+# Ne-root uživatel z base image (APP_UID). Zápis jen do /tmp a do volume s klíči.
+# Adresář pro klíče zakládá image s majitelem APP_UID – prázdný named volume
+# při prvním připojení převezme vlastnictví z image, takže netřeba :U.
+RUN mkdir -p /var/lib/packer/keys && chown $APP_UID /var/lib/packer/keys
+
+USER $APP_UID
+
+ENTRYPOINT ["dotnet", "Packer.Api.dll"]
+
+# Podman staví defaultně OCI formát, který HEALTHCHECK nezná; v produkci ho
+# nastavuje Quadlet (HealthCmd) a v CI image dostane docker formát.
+HEALTHCHECK --interval=15s --timeout=3s --start-period=20s --retries=5 \
+    CMD curl -fsS http://127.0.0.1:8080/health || exit 1

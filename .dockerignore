@@ -1,0 +1,35 @@
+# Build context je kořen repa; do image patří jen to, co Containerfile kopíruje.
+# Menší context = rychlejší build a žádné node_modules z Windows.
+
+.git
+.github
+.gitignore
+.gitattributes
+.vscode
+.idea
+
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/dist-ssr
+**/storybook-static
+**/TestResults
+**/coverage
+**/.vite
+**/*.tsbuildinfo
+
+# Na serveru se pouští z repa, do image nepatří.
+deploy/quadlet
+deploy/compose.yaml
+deploy/compose.dev.yaml
+deploy/deploy.sh
+deploy/backup.sh
+deploy/README.md
+deploy/.env.example
+
+# Dokumentace a designové podklady.
+docs
+design
+AGENTS.md
+README.md

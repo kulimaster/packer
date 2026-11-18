@@ -1,0 +1,6 @@
+[Unit]
+Description=Packer – interní síť (API, DB, web)
+
+# Vlastní síť: kontejnery se vidí jménem, ale databáze není vystavená ven.
+[Network]
+NetworkName=packer

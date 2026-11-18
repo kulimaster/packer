@@ -1,0 +1,6 @@
+[Unit]
+Description=Packer – klíče pro šifrování auth cookie
+
+# Bez persistentních klíčů by se po každém nasazení všichni odhlásili.
+[Volume]
+VolumeName=packer-dp-keys
