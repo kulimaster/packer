@@ -1,6 +1,7 @@
 import { Plus, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useI18n } from '@/lib/i18n';
 import { formatWeight } from '../format';
 import { BagCard, type PackingBag } from './bag-card';
 import { BagForm, type BagValues } from './bag-form';
@@ -58,23 +59,25 @@ export function BagsPanel({
   onDelete,
   className,
 }: BagsPanelProps) {
+  const { t, locale } = useI18n();
+
   return (
     <section className={className} aria-labelledby="bags-heading">
       <div className="mb-3 flex items-end justify-between gap-3">
         <div>
           <h2 id="bags-heading" className="font-display text-lg font-bold tracking-tight">
-            Bags
+            {t('bags.title')}
           </h2>
           <p className="flex items-center gap-1.5 text-xs text-on-surface-variant">
             <Scale className="size-3.5" aria-hidden />
-            {formatWeight(totalWeightGrams)} packed in total
+            {t('bags.total', { weight: formatWeight(totalWeightGrams, locale) })}
           </p>
         </div>
 
         {bags.length > 0 && !creating && !readOnly ? (
           <Button variant="secondary" size="sm" onClick={onStartCreating}>
             <Plus className="size-4" aria-hidden />
-            Add bag
+            {t('bags.add')}
           </Button>
         ) : null}
       </div>
@@ -119,16 +122,14 @@ export function BagsPanel({
           <span className="flex size-11 items-center justify-center rounded-full bg-tertiary text-primary">
             <Scale className="size-5" aria-hidden />
           </span>
-          <h3 className="text-sm font-semibold">No bags yet</h3>
+          <h3 className="text-sm font-semibold">{t('bags.empty.title')}</h3>
           <p className="text-xs text-on-surface-variant">
-            {readOnly
-              ? 'This trip has no bags.'
-              : 'Add a bag and split the weight across carry-on and checked luggage.'}
+            {readOnly ? t('bags.empty.bodyReadOnly') : t('bags.empty.body')}
           </p>
           {readOnly ? null : (
             <Button size="sm" onClick={onStartCreating}>
               <Plus className="size-4" aria-hidden />
-              Add first bag
+              {t('bags.empty.action')}
             </Button>
           )}
         </Card>

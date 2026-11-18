@@ -4,7 +4,8 @@ import { Card } from '@/components/ui/card';
 import { IconButton } from '@/components/ui/icon-button';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { cn } from '@/lib/cn';
-import { bagKindIcon, bagKindLabel, type BagKind } from '../bag-kind';
+import { useI18n } from '@/lib/i18n';
+import { bagKindIcon, bagKindMessageKey, type BagKind } from '../bag-kind';
 import { formatKilograms, formatWeight } from '../format';
 import { BagForm, type BagValues } from './bag-form';
 
@@ -33,8 +34,8 @@ export type BagCardProps = {
   className?: string;
 };
 
-function weightText(grams: number): string {
-  return grams > 0 ? formatWeight(grams) : '0 g';
+function weightText(grams: number, locale: string): string {
+  return grams > 0 ? formatWeight(grams, locale) : '0 g';
 }
 
 export function BagCard({
@@ -51,6 +52,7 @@ export function BagCard({
   deleting = false,
   className,
 }: BagCardProps) {
+  const { t, locale } = useI18n();
   const Icon = bagKindIcon[bag.kind];
   const allowanceGrams = bag.allowanceKg === undefined ? null : Math.round(bag.allowanceKg * 1000);
   const remaining = allowanceGrams === null ? null : allowanceGrams - bag.estimatedWeightGrams;
@@ -67,7 +69,7 @@ export function BagCard({
             <div className="min-w-0">
               <h3 className="truncate text-sm font-bold tracking-tight">{bag.name}</h3>
               <Badge tone="neutral" className="mt-1">
-                {bagKindLabel[bag.kind]}
+                {t(bagKindMessageKey[bag.kind])}
               </Badge>
             </div>
 
@@ -76,7 +78,7 @@ export function BagCard({
                 <>
                   <IconButton
                     size="sm"
-                    aria-label={`Edit ${bag.name}`}
+                    aria-label={t('bag.edit', { name: bag.name })}
                     onClick={onStartEditing}
                     disabled={editing || deleting}
                   >
@@ -84,7 +86,7 @@ export function BagCard({
                   </IconButton>
                   <IconButton
                     size="sm"
-                    aria-label={`Delete ${bag.name}`}
+                    aria-label={t('bag.delete', { name: bag.name })}
                     onClick={onDelete}
                     disabled={editing || deleting}
                     className="text-danger hover:bg-danger-bg"
@@ -101,7 +103,10 @@ export function BagCard({
               <ProgressBar
                 className="mt-2.5"
                 size="sm"
-                label={`${weightText(bag.estimatedWeightGrams)} of ${formatKilograms(bag.allowanceKg ?? 0)}`}
+                label={t('bag.capacity', {
+                  packed: weightText(bag.estimatedWeightGrams, locale),
+                  allowance: formatKilograms(bag.allowanceKg ?? 0, locale),
+                })}
                 value={bag.estimatedWeightGrams}
                 max={allowanceGrams > 0 ? allowanceGrams : 1}
               />
@@ -114,20 +119,20 @@ export function BagCard({
                 {remaining === null
                   ? null
                   : remaining > 0
-                    ? `${formatWeight(remaining)} left`
+                    ? t('bag.left', { weight: formatWeight(remaining, locale) })
                     : remaining === 0
-                      ? 'At the limit'
-                      : `Over by ${formatWeight(-remaining)}`}
+                      ? t('bag.atLimit')
+                      : t('bag.over', { weight: formatWeight(-remaining, locale) })}
               </p>
             </>
           ) : (
             <p className="mt-2 text-xs tabular-nums text-on-surface-variant">
-              {weightText(bag.estimatedWeightGrams)} · no limit set
+              {t('bag.noLimit', { weight: weightText(bag.estimatedWeightGrams, locale) })}
             </p>
           )}
 
           <p className="mt-1.5 truncate text-xs text-on-surface-variant">
-            {categoryNames.length > 0 ? categoryNames.join(' · ') : 'No categories assigned yet.'}
+            {categoryNames.length > 0 ? categoryNames.join(' · ') : t('bag.noCategories')}
           </p>
         </div>
       </div>

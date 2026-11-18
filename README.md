@@ -8,9 +8,10 @@ zaškrtáváš sbaleno a vidíš, kolik ti zbývá a kolik to váží.
 ## Stav
 
 `v1 funkčně hotová` – účty (cookie + CSRF), výlety, kategorie a položky, bagy s váhami,
-archivace i šablony s importem. API má unit i integrační testy, web unit testy. Připravené
-je i produkční nasazení (image, Quadlet units, runbook v [`deploy/README.md`](deploy/README.md));
-zbývá polish. Rozsah v1: [`docs/roadmap.md`](docs/roadmap.md).
+archivace i šablony s importem. UI je česky s přepínačem do angličtiny.
+API má unit i integrační testy, web unit testy. Připravené je i produkční nasazení
+(image, Quadlet units, runbook v [`deploy/README.md`](deploy/README.md)); zbývá polish.
+Rozsah v1: [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Stack
 

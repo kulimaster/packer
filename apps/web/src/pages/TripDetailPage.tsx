@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { ApiError } from '@/lib/api/client';
+import { errorText } from '@/lib/api/errors';
 import { toTemplateCard, useImportTemplates, useTemplates } from '@/features/templates/api';
 import { TemplateImportPanel } from '@/features/templates/components/template-import-panel';
 import {
@@ -44,11 +45,13 @@ import type { AddItemValues } from '@/features/trips/components/add-item-form';
 import type { BagValues } from '@/features/trips/components/bag-form';
 import { BagsPanel } from '@/features/trips/components/bags-panel';
 import { CategoryCard } from '@/features/trips/components/category-card';
-import { tripStatusLabel, tripStatusTone } from '@/features/trips/trip-status';
+import { tripStatusMessageKey, tripStatusTone } from '@/features/trips/trip-status';
 import { getCover } from '@/features/trips/covers';
 import { formatWeight } from '@/features/trips/format';
+import { useI18n } from '@/lib/i18n';
 
 export function TripDetailPage() {
+  const { t } = useI18n();
   const { tripId = '' } = useParams();
   const trip = useTrip(tripId);
 
@@ -62,24 +65,22 @@ export function TripDetailPage() {
     return (
       <Card className="space-y-4 px-6 py-12 text-center">
         <h1 className="text-lg font-semibold">
-          {notFound ? 'Trip not found' : 'Trip could not be loaded'}
+          {notFound ? t('tripDetail.notFound.title') : t('tripDetail.error.title')}
         </h1>
         <p className="text-sm text-on-surface-variant">
-          {notFound
-            ? 'The trip may have been deleted, or it belongs to another account.'
-            : trip.error.message}
+          {notFound ? t('tripDetail.notFound.body') : errorText(trip.error, t)}
         </p>
         <div className="flex justify-center gap-3">
           {!notFound ? (
             <Button variant="secondary" onClick={() => void trip.refetch()}>
-              Try again
+              {t('common.tryAgain')}
             </Button>
           ) : null}
           <Link
             to="/"
             className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
           >
-            Back to trips
+            {t('tripDetail.back')}
           </Link>
         </div>
       </Card>
@@ -90,6 +91,7 @@ export function TripDetailPage() {
 }
 
 function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: string }) {
+  const { t, locale } = useI18n();
   const createCategory = useCreateCategory(tripId);
   const createItem = useCreateItem(tripId);
   const setPacked = useSetItemPacked(tripId);
@@ -116,7 +118,7 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
   const packed = Number(trip.packedCount);
   const total = Number(trip.totalCount);
   const weight = Number(trip.estimatedWeightGrams);
-  const dateRange = formatDateRange(trip.startDate, trip.endDate);
+  const dateRange = formatDateRange(trip.startDate, trip.endDate, locale);
   const cover = getCover(trip.coverImage ?? undefined);
   const categories = trip.categories.map(toPackingCategory);
   const bags = trip.bags.map(toPackingBag);
@@ -200,7 +202,7 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
         >
           <ArrowLeft className="size-4" aria-hidden />
-          All trips
+          {t('tripDetail.allTrips')}
         </Link>
 
         <Button
@@ -214,20 +216,20 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
           ) : (
             <Archive className="size-4" aria-hidden />
           )}
-          {archived ? 'Restore trip' : 'Archive trip'}
+          {archived ? t('tripDetail.restore') : t('tripDetail.archive')}
         </Button>
       </div>
 
       {setArchived.error ? (
         <p role="alert" className="rounded-input bg-danger-bg px-3 py-2 text-sm text-danger-fg">
-          {errorMessage(setArchived.error)}
+          {errorText(setArchived.error, t)}
         </p>
       ) : null}
 
       {archived ? (
         <div className="flex items-start gap-3 rounded-card border border-outline bg-surface-container px-4 py-3 text-sm text-on-surface-variant">
           <Archive className="mt-0.5 size-4 shrink-0" aria-hidden />
-          <p>This trip is archived and read-only. Restore it to keep packing.</p>
+          <p>{t('tripDetail.archivedNotice')}</p>
         </div>
       ) : null}
 
@@ -242,7 +244,7 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
           />
           <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-3 p-4 sm:p-6">
             <div className="min-w-0">
-              <Badge tone={tripStatusTone[status]}>{tripStatusLabel[status]}</Badge>
+              <Badge tone={tripStatusTone[status]}>{t(tripStatusMessageKey[status])}</Badge>
               <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white drop-shadow-sm">
                 {trip.title}
               </h1>
@@ -267,7 +269,7 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
         <div className="grid gap-4 p-4 sm:grid-cols-3 sm:p-6">
           <div>
             <p className="text-xs font-semibold tracking-wide text-on-surface-variant uppercase">
-              Packed
+              {t('tripDetail.packed')}
             </p>
             <p className="mt-1 text-2xl font-bold tabular-nums">
               {packed}{' '}
@@ -277,17 +279,23 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
 
           <div>
             <p className="text-xs font-semibold tracking-wide text-on-surface-variant uppercase">
-              Progress
+              {t('tripDetail.progress')}
             </p>
-            <ProgressBar className="mt-3" value={packed} max={total > 0 ? total : 1} showValue />
+            <ProgressBar
+              className="mt-3"
+              value={packed}
+              max={total > 0 ? total : 1}
+              label={t('tripDetail.progress')}
+              showValue
+            />
           </div>
 
           <div>
             <p className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-on-surface-variant uppercase">
               <Scale className="size-3.5" aria-hidden />
-              Estimated weight
+              {t('tripDetail.weight')}
             </p>
-            <p className="mt-1 text-2xl font-bold tabular-nums">{formatWeight(weight)}</p>
+            <p className="mt-1 text-2xl font-bold tabular-nums">{formatWeight(weight, locale)}</p>
           </div>
         </div>
       </Card>
@@ -295,12 +303,14 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
         <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-display text-lg font-bold tracking-tight">Packing list</h2>
+            <h2 className="font-display text-lg font-bold tracking-tight">
+              {t('tripDetail.packingList')}
+            </h2>
 
             {!archived && !importingTemplates ? (
               <Button variant="secondary" size="sm" onClick={openTemplatePicker}>
                 <Sparkles className="size-4" aria-hidden />
-                Add templates
+                {t('tripDetail.addTemplates')}
               </Button>
             ) : null}
           </div>
@@ -315,8 +325,8 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
               pending={importTemplates.isPending}
               loading={templates.isPending}
               error={
-                errorMessage(importTemplates.error) ??
-                (templates.isError ? errorMessage(templates.error) : null)
+                errorText(importTemplates.error, t) ??
+                (templates.isError ? errorText(templates.error, t) : null)
               }
             />
           ) : null}
@@ -336,7 +346,7 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
                 onAddItem={(values) => handleAddItem(category.id, values)}
                 addingPending={createItem.isPending && addingItemCategoryId === category.id}
                 addError={
-                  addingItemCategoryId === category.id ? errorMessage(createItem.error) : null
+                  addingItemCategoryId === category.id ? errorText(createItem.error, t) : null
                 }
                 addFieldErrors={
                   createItem.error instanceof ApiError ? createItem.error.fieldErrors : {}
@@ -351,19 +361,19 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
               <span className="flex size-14 items-center justify-center rounded-full bg-tertiary text-primary">
                 <Backpack className="size-7" aria-hidden />
               </span>
-              <h2 className="text-lg font-semibold">No categories yet</h2>
+              <h2 className="text-lg font-semibold">{t('tripDetail.noCategories.title')}</h2>
               <p className="max-w-sm text-sm text-on-surface-variant">
-                Rozděl balení na sekce – třeba carry-on, elektroniku a oblečení.
+                {t('tripDetail.noCategories.body')}
               </p>
               {archived ? null : (
                 <div className="flex flex-wrap justify-center gap-2">
                   <Button onClick={() => setAddingCategory(true)}>
                     <Plus className="size-4" aria-hidden />
-                    Add first category
+                    {t('tripDetail.addFirstCategory')}
                   </Button>
                   <Button variant="secondary" onClick={openTemplatePicker}>
                     <Sparkles className="size-4" aria-hidden />
-                    Start from a template
+                    {t('tripDetail.startFromTemplate')}
                   </Button>
                 </div>
               )}
@@ -375,7 +385,7 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
               onSubmit={handleAddCategory}
               onCancel={() => setAddingCategory(false)}
               pending={createCategory.isPending}
-              error={errorMessage(createCategory.error)}
+              error={errorText(createCategory.error, t)}
               fieldErrors={
                 createCategory.error instanceof ApiError ? createCategory.error.fieldErrors : {}
               }
@@ -383,7 +393,7 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
           ) : !archived && categories.length > 0 ? (
             <Button variant="secondary" onClick={() => setAddingCategory(true)}>
               <Plus className="size-4" aria-hidden />
-              Add category
+              {t('tripDetail.addCategory')}
             </Button>
           ) : null}
         </div>
@@ -399,14 +409,14 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
           onCancelCreating={() => setAddingBag(false)}
           onCreate={handleCreateBag}
           createPending={createBag.isPending}
-          createError={errorMessage(createBag.error)}
+          createError={errorText(createBag.error, t)}
           createFieldErrors={createBag.error instanceof ApiError ? createBag.error.fieldErrors : {}}
           editingBagId={editingBagId}
           onStartEditing={setEditingBagId}
           onCancelEditing={() => setEditingBagId(null)}
           onUpdate={handleUpdateBag}
           updatePending={updateBag.isPending}
-          updateError={errorMessage(updateBag.error)}
+          updateError={errorText(updateBag.error, t)}
           updateFieldErrors={updateBag.error instanceof ApiError ? updateBag.error.fieldErrors : {}}
           deletingBagId={deletingBagId}
           onDelete={handleDeleteBag}
@@ -416,21 +426,15 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
   );
 }
 
-/** Prázdné pole v formuláři = „bez limitu“, ne nula kilogramů. */
+/**
+ * Prázdné pole v BagFormu = „bez limitu“, ne nula kilogramů.
+ */
 function toBagInput(values: BagValues): BagInput {
   return {
     name: values.name,
     kind: values.kind,
     allowanceKg: values.allowanceKg === '' ? null : Number(values.allowanceKg),
   };
-}
-
-function errorMessage(error: unknown): string | null {
-  if (!error) {
-    return null;
-  }
-
-  return error instanceof Error ? error.message : 'Something went wrong.';
 }
 
 function TripDetailLoading() {

@@ -1,9 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { useI18n, type I18n } from '@/lib/i18n';
 
 export type AuthMode = 'login' | 'register';
 
@@ -13,20 +15,28 @@ export type AuthFormValues = {
   displayName?: string;
 };
 
-const loginSchema = z.object({
-  email: z.string().trim().min(1, 'Email is required.').email('Enter a valid email address.'),
-  password: z.string().min(1, 'Password is required.'),
-  displayName: z.string().optional(),
-});
+function loginSchema(t: I18n['t']) {
+  return z.object({
+    email: z
+      .string()
+      .trim()
+      .min(1, t('auth.validation.emailRequired'))
+      .email(t('auth.validation.emailInvalid')),
+    password: z.string().min(1, t('auth.validation.passwordRequired')),
+    displayName: z.string().optional(),
+  });
+}
 
-const registerSchema = loginSchema.extend({
-  displayName: z
-    .string()
-    .trim()
-    .min(1, 'Display name is required.')
-    .max(80, 'Use 80 characters or fewer.'),
-  password: z.string().min(10, 'Use at least 10 characters.'),
-});
+function registerSchema(t: I18n['t']) {
+  return loginSchema(t).extend({
+    displayName: z
+      .string()
+      .trim()
+      .min(1, t('auth.validation.displayNameRequired'))
+      .max(80, t('auth.validation.displayNameMax')),
+    password: z.string().min(10, t('auth.validation.passwordMin')),
+  });
+}
 
 export type AuthCardProps = {
   mode: AuthMode;
@@ -47,10 +57,12 @@ export function AuthCard({
   error,
   fieldErrors = {},
 }: AuthCardProps) {
+  const { t } = useI18n();
   const isRegister = mode === 'register';
+  const schema = useMemo(() => (isRegister ? registerSchema(t) : loginSchema(t)), [isRegister, t]);
 
   const form = useForm<AuthFormValues>({
-    resolver: zodResolver(isRegister ? registerSchema : loginSchema),
+    resolver: zodResolver(schema),
     defaultValues: { email: '', password: '', displayName: '' },
   });
 
@@ -66,12 +78,10 @@ export function AuthCard({
     <Card className="mx-auto w-full max-w-md space-y-6 p-6">
       <div className="space-y-1">
         <h2 className="text-2xl font-bold tracking-tight">
-          {isRegister ? 'Create your account' : 'Welcome back'}
+          {isRegister ? t('auth.register.title') : t('auth.login.title')}
         </h2>
         <p className="text-sm text-on-surface-variant">
-          {isRegister
-            ? 'Účet drží tvoje výlety, balicí seznamy a šablony.'
-            : 'Přihlas se a pokračuj v balení.'}
+          {isRegister ? t('auth.register.subtitle') : t('auth.login.subtitle')}
         </p>
       </div>
 
@@ -82,28 +92,28 @@ export function AuthCard({
       >
         {isRegister ? (
           <Input
-            label="Display name"
+            label={t('auth.field.displayName')}
             autoComplete="name"
-            placeholder="Martin"
+            placeholder={t('auth.placeholder.displayName')}
             error={serverError('displayName')}
             {...form.register('displayName')}
           />
         ) : null}
 
         <Input
-          label="Email"
+          label={t('auth.field.email')}
           type="email"
           autoComplete="email"
-          placeholder="you@example.com"
+          placeholder={t('auth.placeholder.email')}
           error={serverError('email')}
           {...form.register('email')}
         />
 
         <Input
-          label="Password"
+          label={t('auth.field.password')}
           type="password"
           autoComplete={isRegister ? 'new-password' : 'current-password'}
-          placeholder={isRegister ? 'At least 10 characters' : '••••••••••'}
+          placeholder={isRegister ? t('auth.placeholder.passwordNew') : '••••••••••'}
           error={serverError('password')}
           {...form.register('password')}
         />
@@ -115,18 +125,22 @@ export function AuthCard({
         ) : null}
 
         <Button type="submit" fullWidth disabled={pending}>
-          {pending ? 'Please wait…' : isRegister ? 'Create account' : 'Sign in'}
+          {pending
+            ? t('auth.submit.pending')
+            : isRegister
+              ? t('auth.submit.register')
+              : t('auth.submit.login')}
         </Button>
       </form>
 
       <p className="text-center text-sm text-on-surface-variant">
-        {isRegister ? 'Already have an account?' : 'New to Packer?'}{' '}
+        {isRegister ? t('auth.switch.toRegister') : t('auth.switch.toLogin')}{' '}
         <button
           type="button"
           className="font-semibold text-primary hover:underline"
           onClick={() => onModeChange(isRegister ? 'login' : 'register')}
         >
-          {isRegister ? 'Sign in' : 'Create an account'}
+          {isRegister ? t('auth.switch.toLoginAction') : t('auth.switch.toRegisterAction')}
         </button>
       </p>
     </Card>

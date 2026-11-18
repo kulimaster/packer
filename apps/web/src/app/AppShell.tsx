@@ -1,11 +1,20 @@
-import { LayoutGrid, Plane, SlidersHorizontal } from 'lucide-react';
+import { LayoutGrid, Plane, SlidersHorizontal, type LucideIcon } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/cn';
+import { useI18n, type MessageKey } from '@/lib/i18n';
+import { LanguageSwitcher } from './language-switcher';
 
-const navigation = [
-  { to: '/', label: 'Trips', icon: Plane, end: true },
-  { to: '/templates', label: 'Templates', icon: LayoutGrid, end: false },
-  { to: '/settings', label: 'Settings', icon: SlidersHorizontal, end: false },
+type NavigationItem = {
+  to: string;
+  messageKey: MessageKey;
+  icon: LucideIcon;
+  end: boolean;
+};
+
+const navigation: NavigationItem[] = [
+  { to: '/', messageKey: 'nav.trips', icon: Plane, end: true },
+  { to: '/templates', messageKey: 'nav.templates', icon: LayoutGrid, end: false },
+  { to: '/settings', messageKey: 'nav.settings', icon: SlidersHorizontal, end: false },
 ];
 
 function Brand() {
@@ -20,6 +29,8 @@ function Brand() {
 }
 
 export function AppShell() {
+  const { t } = useI18n();
+
   return (
     <div className="min-h-dvh bg-surface">
       {/* Desktop: levý sidebar */}
@@ -27,7 +38,7 @@ export function AppShell() {
         <Brand />
 
         <nav className="mt-8 flex flex-1 flex-col gap-1">
-          {navigation.map(({ to, label, icon: Icon, end }) => (
+          {navigation.map(({ to, messageKey, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
@@ -40,13 +51,15 @@ export function AppShell() {
               }
             >
               <Icon className="size-5" aria-hidden />
-              {label}
+              {t(messageKey)}
             </NavLink>
           ))}
         </nav>
 
-        <div className="rounded-card bg-surface-container px-3 py-2 text-xs text-on-surface-variant">
-          v0.1 · vývoj
+        <LanguageSwitcher />
+
+        <div className="mt-2 rounded-card bg-surface-container px-3 py-2 text-xs text-on-surface-variant">
+          {t('app.version')}
         </div>
       </aside>
 
@@ -54,6 +67,7 @@ export function AppShell() {
         {/* Mobil: horní lišta */}
         <header className="sticky top-0 z-10 flex items-center justify-between border-b border-outline bg-surface/90 px-4 py-3 backdrop-blur lg:hidden">
           <Brand />
+          <LanguageSwitcher />
         </header>
 
         <main className="mx-auto w-full max-w-5xl px-4 pt-6 pb-28 lg:px-8 lg:pb-12">
@@ -63,7 +77,7 @@ export function AppShell() {
 
       {/* Mobil: bottom nav */}
       <nav className="fixed inset-x-0 bottom-0 z-10 flex border-t border-outline bg-card pb-[env(safe-area-inset-bottom)] lg:hidden">
-        {navigation.map(({ to, label, icon: Icon, end }) => (
+        {navigation.map(({ to, messageKey, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
@@ -76,7 +90,7 @@ export function AppShell() {
             }
           >
             <Icon className="size-5" aria-hidden />
-            {label}
+            {t(messageKey)}
           </NavLink>
         ))}
       </nav>

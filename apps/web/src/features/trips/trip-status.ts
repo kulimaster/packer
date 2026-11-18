@@ -1,12 +1,14 @@
 import type { BadgeTone } from '@/components/ui/badge.variants';
+import type { MessageKey } from '@/lib/i18n';
 
 export type TripStatus = 'not-started' | 'in-progress' | 'ready' | 'archived';
 
-export const tripStatusLabel: Record<TripStatus, string> = {
-  'not-started': 'Not started',
-  'in-progress': 'In progress',
-  ready: 'Ready to go',
-  archived: 'Archived',
+/** Překladový klíč stavu – text se bere z katalogu, ne z komponenty. */
+export const tripStatusMessageKey: Record<TripStatus, MessageKey> = {
+  'not-started': 'tripStatus.notStarted',
+  'in-progress': 'tripStatus.inProgress',
+  ready: 'tripStatus.ready',
+  archived: 'tripStatus.archived',
 };
 
 export const tripStatusTone: Record<TripStatus, BadgeTone> = {

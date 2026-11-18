@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import type { BadgeTone } from '@/components/ui/badge.variants';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/cn';
+import { useI18n, type MessageKey } from '@/lib/i18n';
 import { formatWeight } from '../format';
 
 export type PackingItem = {
@@ -18,11 +19,11 @@ export type PackingItem = {
   estimatedWeightGrams: number;
 };
 
-const traitLabels: Record<string, { label: string; tone: BadgeTone }> = {
-  CarryOnOnly: { label: 'Carry-on only', tone: 'info' },
-  Fragile: { label: 'Fragile', tone: 'warning' },
-  TsaLiquid: { label: '<100ml TSA', tone: 'info' },
-  Battery: { label: 'Battery', tone: 'warning' },
+const traitLabels: Record<string, { messageKey: MessageKey; tone: BadgeTone }> = {
+  CarryOnOnly: { messageKey: 'item.trait.carryOnOnly', tone: 'info' },
+  Fragile: { messageKey: 'item.trait.fragile', tone: 'warning' },
+  TsaLiquid: { messageKey: 'item.trait.tsaLiquid', tone: 'info' },
+  Battery: { messageKey: 'item.trait.battery', tone: 'warning' },
 };
 
 function traitKeys(flags: string): string[] {
@@ -48,6 +49,7 @@ export function ItemRow({
   pending = false,
   className,
 }: ItemRowProps) {
+  const { t, locale } = useI18n();
   const traits = traitKeys(item.flags);
 
   return (
@@ -63,7 +65,9 @@ export function ItemRow({
         disabled={pending || !onTogglePacked}
         onChange={(event) => onTogglePacked?.(event.target.checked)}
         aria-label={
-          item.isPacked ? `Mark ${item.title} as unpacked` : `Mark ${item.title} as packed`
+          item.isPacked
+            ? t('item.markUnpacked', { title: item.title })
+            : t('item.markPacked', { title: item.title })
         }
         className="mt-0.5"
       />
@@ -83,14 +87,14 @@ export function ItemRow({
             <span className="text-xs font-semibold text-on-surface-variant">×{item.quantity}</span>
           ) : null}
 
-          {item.isEssential ? <Badge tone="essential">Essential</Badge> : null}
+          {item.isEssential ? <Badge tone="essential">{t('item.essential')}</Badge> : null}
 
           {traits.map((trait) => {
             const meta = traitLabels[trait];
 
             return meta ? (
               <Badge key={trait} tone={meta.tone}>
-                {meta.label}
+                {t(meta.messageKey)}
               </Badge>
             ) : null;
           })}
@@ -103,7 +107,7 @@ export function ItemRow({
 
       {item.estimatedWeightGrams > 0 ? (
         <span className="mt-0.5 shrink-0 text-xs tabular-nums text-on-surface-variant">
-          {formatWeight(item.estimatedWeightGrams)}
+          {formatWeight(item.estimatedWeightGrams, locale)}
         </span>
       ) : null}
 
@@ -112,7 +116,7 @@ export function ItemRow({
           type="button"
           onClick={onDelete}
           disabled={pending}
-          aria-label={`Delete ${item.title}`}
+          aria-label={t('item.delete', { title: item.title })}
           className="mt-0.5 shrink-0 rounded-full p-1.5 text-muted transition-colors hover:bg-danger-bg hover:text-danger-fg disabled:pointer-events-none disabled:opacity-50"
         >
           <Trash2 className="size-4" aria-hidden />

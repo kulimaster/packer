@@ -67,6 +67,39 @@ Kompozitní (`src/features/*/components/`) – skládají primitiva a znají dom
 `TripCard` · `CoverPicker` · `TripHeader` · `PackingCategory` · `ItemRow` · `ItemCheckbox` · `WeightWidget` ·
 `TemplateCard` · `TemplateImportPanel` · `TripProgress`
 
+## Jazyk a překlady
+
+Čeština je **výchozí jazyk UI**, angličtina je volitelná přepínačem v `AppShell` (funguje i nepřihlášený).
+Volba se ukládá do `localStorage` (`packer.language`) a do `<html lang>`.
+
+| Věc | Kde |
+|---|---|
+| České texty (zdroj typů) | `apps/web/src/lib/i18n/messages.cs.ts` |
+| Anglické texty | `apps/web/src/lib/i18n/messages.en.ts` |
+| Provider | `apps/web/src/lib/i18n/i18n.tsx` |
+| `useI18n()` a kontext | `apps/web/src/lib/i18n/context.ts` |
+| Interpolace, plurály, locale | `apps/web/src/lib/i18n/translate.ts` |
+
+Pravidla:
+
+1. **V komponentách není ani jedno uživatelské slovo.** Text se bere přes
+   `const { t } = useI18n()` a `t('oblast.nazev')`. Platí to i pro `aria-label`, `placeholder`,
+   `title` a `hint`.
+2. **Hodnoty do textu jdou jako placeholder**, ne skládáním stringů:
+   `t('trips.subtitle', { name })` pro `„… Přihlášený jako {name}.“`.
+3. **Plurály přes `plural('…', count)`**, ne `count === 1 ? … : …`. Tvary se píšou do katalogu
+   (`one` / `few` / `other`) a jazyk si vybere `Intl.PluralRules`.
+4. **Formátování je lokalizované**: `formatWeight(grams, locale)`, `formatKilograms(kg, locale)`,
+   `formatDateRange(start, end, locale)` – `locale` vždy z `useI18n()`.
+5. **Validační hlášky v Zod schématu** patří do katalogu. Schéma je proto funkce
+   `(t: I18n['t']) => …` a v komponentě se drží přes `useMemo(() => schema(t), [t])`.
+6. **Paritu katalogů hlídá typecheck**: `Messages` je odvozený z `cs`, takže chybějící klíč v `en`
+   je chyba buildu. Nový text = klíč v obou souborech, žádné „přeložím později“.
+7. **Chyby z API zůstávají v angličtině** – backend je zdroj kontraktu a jeho hlášky se zobrazují
+   tak, jak přijdou. Překládá se jen to, co vzniká ve frontendu.
+8. **Story pro oba jazyky**: obal komponentu `<I18nProvider initialLanguage="en">`, ať je vidět,
+   že se texty opravdu berou z katalogu a rozložení se nerozsype.
+
 ## Cover fotky
 
 Výlet má výchozí fotografii z kurátorované sady (`asia-tokyo`, `trip-bike-trail`, …), takže nový

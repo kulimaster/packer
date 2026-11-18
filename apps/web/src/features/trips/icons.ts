@@ -17,6 +17,7 @@ import {
   Umbrella,
   type LucideIcon,
 } from 'lucide-react';
+import type { MessageKey } from '@/lib/i18n';
 
 /**
  * Registr ikon kategorií. V DB je jen klíč (`plane`), ne název komponenty –
@@ -42,6 +43,26 @@ export const categoryIcons = {
 } satisfies Record<string, LucideIcon>;
 
 export type CategoryIconKey = keyof typeof categoryIcons;
+
+/** Překladové klíče ikon pro čtečky – `aria-label` nesmí být anglický klíč z DB. */
+export const categoryIconMessageKey: Record<CategoryIconKey, MessageKey> = {
+  backpack: 'categoryIcon.backpack',
+  plane: 'categoryIcon.plane',
+  briefcase: 'categoryIcon.briefcase',
+  camera: 'categoryIcon.camera',
+  laptop: 'categoryIcon.laptop',
+  shirt: 'categoryIcon.shirt',
+  sparkles: 'categoryIcon.sparkles',
+  umbrella: 'categoryIcon.umbrella',
+  plug: 'categoryIcon.plug',
+  footprints: 'categoryIcon.footprints',
+  luggage: 'categoryIcon.luggage',
+  smartphone: 'categoryIcon.smartphone',
+  pill: 'categoryIcon.pill',
+  glasses: 'categoryIcon.glasses',
+  book: 'categoryIcon.book',
+  health: 'categoryIcon.health',
+};
 
 export const categoryIconKeys = Object.keys(categoryIcons) as CategoryIconKey[];
 

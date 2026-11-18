@@ -1,5 +1,6 @@
 import { Check, ImageOff } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useI18n } from '@/lib/i18n';
 import type { Cover } from '../covers';
 
 type CoverPickerProps = {
@@ -16,11 +17,13 @@ type CoverPickerProps = {
  * (`searchCovers`, `coversByTag`) – komponenta zůstává bez stavu.
  */
 export function CoverPicker({ covers, value = null, onSelect, className }: CoverPickerProps) {
+  const { t } = useI18n();
+
   if (covers.length === 0) {
     return (
       <p className="flex flex-col items-center gap-2 rounded-input border border-dashed border-outline-strong bg-surface-container px-4 py-10 text-center text-sm text-on-surface-variant">
         <ImageOff className="size-5" aria-hidden />
-        Žádná fotka neodpovídá filtru.
+        {t('coverPicker.empty')}
       </p>
     );
   }

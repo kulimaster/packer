@@ -1,6 +1,7 @@
 import { Check } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/cn';
+import { useI18n } from '@/lib/i18n';
 import { formatWeight } from '@/features/trips/format';
 import { categoryIcons, defaultCategoryIcon, type CategoryIconKey } from '@/features/trips/icons';
 
@@ -48,6 +49,7 @@ export function TemplateCard({
   disabled = false,
   className,
 }: TemplateCardProps) {
+  const { t, locale, plural } = useI18n();
   const Icon =
     categoryIcons[template.icon as CategoryIconKey] ?? categoryIcons[defaultCategoryIcon];
   const interactive = Boolean(onToggle);
@@ -88,13 +90,13 @@ export function TemplateCard({
 
         <span className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-on-surface-variant">
           <span className="font-semibold text-on-surface">
-            {template.itemCount} {template.itemCount === 1 ? 'item' : 'items'}
+            {plural('templateCard.itemCount', template.itemCount)}
           </span>
           <span aria-hidden>·</span>
           <span className="tabular-nums">
             {template.estimatedWeightGrams > 0
-              ? formatWeight(template.estimatedWeightGrams)
-              : 'No weight estimate'}
+              ? formatWeight(template.estimatedWeightGrams, locale)
+              : t('templateCard.noWeight')}
           </span>
         </span>
 

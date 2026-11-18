@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ApiError } from '@/lib/api/client';
+import { errorText } from '@/lib/api/errors';
+import { useI18n } from '@/lib/i18n';
 import { useLogin, useRegister } from '../api';
 import { AuthCard, type AuthFormValues, type AuthMode } from './auth-card';
 
@@ -8,6 +10,7 @@ import { AuthCard, type AuthFormValues, type AuthMode } from './auth-card';
  * o serveru, takže se dá snadno testovat a storybookovat.
  */
 export function AuthPanel() {
+  const { t } = useI18n();
   const [mode, setMode] = useState<AuthMode>('login');
   const login = useLogin();
   const register = useRegister();
@@ -34,11 +37,7 @@ export function AuthPanel() {
     login.mutate({ email: values.email, password: values.password });
   };
 
-  const error = active.error
-    ? active.error instanceof ApiError
-      ? active.error.message
-      : 'Something went wrong. Try again.'
-    : null;
+  const error = errorText(active.error, t);
 
   return (
     <AuthCard

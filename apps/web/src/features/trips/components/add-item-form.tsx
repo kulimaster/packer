@@ -1,24 +1,37 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { useI18n, type I18n } from '@/lib/i18n';
 
-const addItemSchema = z.object({
-  title: z.string().trim().min(1, 'Title is required.').max(120, 'Use 120 characters or fewer.'),
-  quantity: z.number().int().min(1, 'At least 1.').max(999, 'At most 999.'),
-  weightGrams: z
-    .string()
-    .trim()
-    .refine(
-      (value) => value === '' || (/^\d+$/.test(value) && Number(value) <= 100_000),
-      'Use a whole number of grams (0–100000).',
-    ),
-  isEssential: z.boolean(),
-});
+/** Schéma se staví až s překladačem – validační hlášky patří do katalogu. */
+function addItemSchema(t: I18n['t']) {
+  return z.object({
+    title: z
+      .string()
+      .trim()
+      .min(1, t('addItem.validation.titleRequired'))
+      .max(120, t('addItem.validation.titleMax')),
+    quantity: z
+      .number()
+      .int()
+      .min(1, t('addItem.validation.quantityMin'))
+      .max(999, t('addItem.validation.quantityMax')),
+    weightGrams: z
+      .string()
+      .trim()
+      .refine(
+        (value) => value === '' || (/^\d+$/.test(value) && Number(value) <= 100_000),
+        t('addItem.validation.weight'),
+      ),
+    isEssential: z.boolean(),
+  });
+}
 
-export type AddItemValues = z.infer<typeof addItemSchema>;
+export type AddItemValues = z.infer<ReturnType<typeof addItemSchema>>;
 
 export type AddItemFormProps = {
   onSubmit: (values: AddItemValues) => void;
@@ -39,8 +52,11 @@ export function AddItemForm({
   error,
   fieldErrors = {},
 }: AddItemFormProps) {
+  const { t } = useI18n();
+  const schema = useMemo(() => addItemSchema(t), [t]);
+
   const form = useForm<AddItemValues>({
-    resolver: zodResolver(addItemSchema),
+    resolver: zodResolver(schema),
     defaultValues: { title: '', quantity: 1, weightGrams: '', isEssential: false },
   });
 
@@ -54,8 +70,8 @@ export function AddItemForm({
       className="space-y-3 rounded-input bg-surface-container/60 p-3"
     >
       <Input
-        label="Item"
-        placeholder="Passport"
+        label={t('addItem.field.item')}
+        placeholder={t('addItem.placeholder.item')}
         autoFocus
         error={fieldError('title')}
         {...form.register('title')}
@@ -63,7 +79,7 @@ export function AddItemForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Input
-          label="Quantity"
+          label={t('addItem.field.quantity')}
           type="number"
           min={1}
           max={999}
@@ -71,13 +87,13 @@ export function AddItemForm({
           {...form.register('quantity', { valueAsNumber: true })}
         />
         <Input
-          label="Weight (g)"
+          label={t('addItem.field.weight')}
           type="number"
           inputMode="numeric"
           min={0}
           max={100_000}
-          placeholder="Optional"
-          hint="Weight of one piece."
+          placeholder={t('addItem.placeholder.weight')}
+          hint={t('addItem.hint.weight')}
           error={fieldError('weightGrams')}
           {...form.register('weightGrams')}
         />
@@ -85,7 +101,7 @@ export function AddItemForm({
 
       <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-on-surface">
         <Checkbox {...form.register('isEssential')} />
-        Essential
+        {t('addItem.essential')}
       </label>
 
       {error ? (
@@ -96,10 +112,10 @@ export function AddItemForm({
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={pending}>
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button type="submit" size="sm" disabled={pending}>
-          {pending ? 'Adding…' : 'Add item'}
+          {pending ? t('addItem.submitPending') : t('addItem.submit')}
         </Button>
       </div>
     </form>

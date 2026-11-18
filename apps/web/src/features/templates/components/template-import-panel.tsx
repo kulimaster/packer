@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { IconButton } from '@/components/ui/icon-button';
 import { cn } from '@/lib/cn';
+import { useI18n } from '@/lib/i18n';
 import { TemplateCard, type TemplateCardData } from './template-card';
 
 export type TemplateImportPanelProps = {
@@ -32,24 +33,25 @@ export function TemplateImportPanel({
   loading = false,
   className,
 }: TemplateImportPanelProps) {
+  const { t, plural } = useI18n();
   const selectedCount = selectedIds.length;
   const confirmLabel =
     selectedCount === 0
-      ? 'Add templates'
-      : `Add ${selectedCount} ${selectedCount === 1 ? 'template' : 'templates'}`;
+      ? t('templateImport.confirm')
+      : plural('templateImport.confirmCount', selectedCount);
 
   return (
     <Card className={cn('overflow-hidden', className)}>
       <div className="flex items-start justify-between gap-3 border-b border-outline px-4 py-3">
         <div>
-          <h2 className="font-display text-lg font-bold tracking-tight">Add templates</h2>
-          <p className="text-xs text-on-surface-variant">
-            Pick one or more kits. Items are appended to your packing list.
-          </p>
+          <h2 className="font-display text-lg font-bold tracking-tight">
+            {t('templateImport.title')}
+          </h2>
+          <p className="text-xs text-on-surface-variant">{t('templateImport.subtitle')}</p>
         </div>
         <IconButton
           size="sm"
-          aria-label="Close template picker"
+          aria-label={t('templateImport.close')}
           onClick={onClose}
           disabled={pending}
         >
@@ -60,11 +62,11 @@ export function TemplateImportPanel({
       <div className="max-h-[26rem] space-y-2 overflow-y-auto p-4">
         {loading ? (
           <p className="px-1 py-6 text-center text-sm text-on-surface-variant">
-            Loading templates…
+            {t('templateImport.loading')}
           </p>
         ) : templates.length === 0 ? (
           <p className="px-1 py-6 text-center text-sm text-on-surface-variant">
-            No templates available yet.
+            {t('templateImport.empty')}
           </p>
         ) : (
           templates.map((template) => (
@@ -91,13 +93,13 @@ export function TemplateImportPanel({
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-outline px-4 py-3">
         <p className="text-xs text-on-surface-variant">
           {selectedCount === 0
-            ? 'Nothing selected yet.'
-            : `${selectedCount} selected · categories are matched by name`}
+            ? t('templateImport.noneSelected')
+            : t('templateImport.selected', { count: selectedCount })}
         </p>
 
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={onClose} disabled={pending}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             size="sm"

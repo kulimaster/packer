@@ -70,6 +70,8 @@ src/
 ```
 
 - **Barvy a spacing jen přes tokeny** z `apps/web/src/styles/tokens.css`. Žádné `#0f766e` v komponentě.
+- **Texty jen přes `useI18n()`** (`src/lib/i18n/`, výchozí čeština, přepínač do angličtiny). Žádné uživatelské
+  texty ani `aria-label` natvrdo v komponentě – klíč patří do `messages.cs.ts` i `messages.en.ts`.
 - **Každá komponenta má story** (`*.stories.tsx`) ve stavech: default, hover, focus, disabled, loading, empty, error, dlouhý text.
 - `any` je zakázané. `unknown` + narrowing, nebo typ z `schema.d.ts`.
 - Server state = TanStack Query. Žádný Redux. Lokální UI state = `useState`/`useReducer`.

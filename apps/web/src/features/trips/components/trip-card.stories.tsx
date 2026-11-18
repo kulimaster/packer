@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { I18nProvider } from '@/lib/i18n';
 import { TripCard, type TripSummary } from './trip-card';
 
 const asiaTrip: TripSummary = {
@@ -126,4 +127,15 @@ export const Grid: Story = {
       />
     </div>
   ),
+};
+
+/** Anglické UI – stejná karta, jiný katalog zpráv. */
+export const English: Story = {
+  decorators: [
+    (Story) => (
+      <I18nProvider initialLanguage="en">
+        <Story />
+      </I18nProvider>
+    ),
+  ],
 };

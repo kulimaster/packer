@@ -315,12 +315,29 @@ export function toTripStatus(status: TripDto['status']): TripStatus {
   }
 }
 
-const monthDay = new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' });
+const monthFormats = new Map<string, Intl.DateTimeFormat>();
 
-export function formatDateRange(start: string | null, end: string | null): string | undefined {
+function monthDayFormat(locale: string): Intl.DateTimeFormat {
+  let format = monthFormats.get(locale);
+
+  if (!format) {
+    format = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' });
+    monthFormats.set(locale, format);
+  }
+
+  return format;
+}
+
+export function formatDateRange(
+  start: string | null,
+  end: string | null,
+  locale = 'cs-CZ',
+): string | undefined {
   if (!start && !end) {
     return undefined;
   }
+
+  const monthDay = monthDayFormat(locale);
 
   // DateOnly nemá čas; parsujeme půlnoc lokálně, aby se datum neposunulo o den.
   const parse = (iso: string) => new Date(`${iso}T00:00:00`);
@@ -334,12 +351,12 @@ export function formatDateRange(start: string | null, end: string | null): strin
   return `${monthDay.format(single)}, ${single.getFullYear()}`;
 }
 
-export function toTripCard(trip: TripDto): TripSummary {
+export function toTripCard(trip: TripDto, locale = 'cs-CZ'): TripSummary {
   return {
     id: trip.id,
     title: trip.title,
     destination: trip.destination ?? undefined,
-    dateRange: formatDateRange(trip.startDate, trip.endDate),
+    dateRange: formatDateRange(trip.startDate, trip.endDate, locale),
     packed: Number(trip.packedCount),
     total: Number(trip.totalCount),
     status: toTripStatus(trip.status),

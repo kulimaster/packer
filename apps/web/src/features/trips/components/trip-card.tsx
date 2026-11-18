@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { cn } from '@/lib/cn';
+import { useI18n } from '@/lib/i18n';
 import { getCover } from '../covers';
-import { tripStatusLabel, tripStatusTone, type TripStatus } from '../trip-status';
+import { tripStatusMessageKey, tripStatusTone, type TripStatus } from '../trip-status';
 
 export type TripSummary = {
   id: string;
@@ -34,6 +35,7 @@ type TripCardProps = {
 };
 
 export function TripCard({ trip, onContinue, ctaVariant = 'primary', className }: TripCardProps) {
+  const { t } = useI18n();
   // Vlastní fotka vyhrává; jinak výchozí cover; jinak gradient.
   const imageUrl = trip.imageUrl ?? getCover(trip.coverId)?.file;
 
@@ -51,7 +53,7 @@ export function TripCard({ trip, onContinue, ctaVariant = 'primary', className }
         ) : null}
         <Badge tone={tripStatusTone[trip.status]} className="absolute top-3 right-3">
           {trip.status === 'ready' ? '✓ ' : ''}
-          {tripStatusLabel[trip.status]}
+          {t(tripStatusMessageKey[trip.status])}
         </Badge>
         {/* Scrim drží název čitelný i na světlé fotce (skála, pláž, sníh). */}
         <div
@@ -82,12 +84,12 @@ export function TripCard({ trip, onContinue, ctaVariant = 'primary', className }
         <ProgressBar
           value={trip.packed}
           max={trip.total > 0 ? trip.total : 1}
-          label={`${trip.packed} / ${trip.total} packed`}
+          label={t('tripCard.packed', { packed: trip.packed, total: trip.total })}
           showValue
         />
 
         <Button variant={ctaVariant} fullWidth onClick={onContinue}>
-          {trip.status === 'archived' ? 'Review packing' : 'Continue Packing'}
+          {trip.status === 'archived' ? t('tripCard.review') : t('tripCard.continue')}
         </Button>
       </div>
     </Card>

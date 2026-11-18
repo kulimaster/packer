@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { Select } from '@/components/ui/select';
+import { useI18n } from '@/lib/i18n';
 import { formatWeight } from '../format';
 import { categoryIcons, type CategoryIconKey } from '../icons';
 import { AddItemForm, type AddItemValues } from './add-item-form';
@@ -62,6 +63,7 @@ export function CategoryCard({
   pendingItemId,
   className,
 }: CategoryCardProps) {
+  const { t, locale } = useI18n();
   const Icon = categoryIcons[category.icon as CategoryIconKey] ?? categoryIcons.backpack;
 
   return (
@@ -88,12 +90,13 @@ export function CategoryCard({
             size="sm"
             value={category.packed}
             max={category.total > 0 ? category.total : 1}
+            label={t('category.progress', { name: category.name })}
           />
 
           {!readOnly && onAssignBag && bags.length > 0 ? (
             <div className="mt-2">
               <Select
-                aria-label={`Bag for ${category.name}`}
+                aria-label={t('category.bagSelect', { name: category.name })}
                 className="h-8 py-0 text-xs"
                 value={category.bagId ?? ''}
                 disabled={bagAssignPending}
@@ -101,7 +104,7 @@ export function CategoryCard({
                   onAssignBag(event.target.value === '' ? null : event.target.value)
                 }
               >
-                <option value="">No bag</option>
+                <option value="">{t('category.noBag')}</option>
                 {bags.map((bag) => (
                   <option key={bag.id} value={bag.id}>
                     {bag.name}
@@ -114,7 +117,7 @@ export function CategoryCard({
 
         {category.estimatedWeightGrams > 0 ? (
           <span className="mt-1 shrink-0 text-xs tabular-nums text-on-surface-variant">
-            {formatWeight(category.estimatedWeightGrams)}
+            {formatWeight(category.estimatedWeightGrams, locale)}
           </span>
         ) : null}
       </div>
@@ -134,9 +137,7 @@ export function CategoryCard({
           ))}
         </ul>
       ) : (
-        <p className="px-4 py-5 text-sm text-on-surface-variant">
-          No items yet – add the first one below.
-        </p>
+        <p className="px-4 py-5 text-sm text-on-surface-variant">{t('category.empty')}</p>
       )}
 
       {readOnly ? null : (
@@ -152,7 +153,7 @@ export function CategoryCard({
           ) : (
             <Button variant="ghost" size="sm" onClick={onStartAdding}>
               <Plus className="size-4" aria-hidden />
-              Add item
+              {t('category.addItem')}
             </Button>
           )}
         </div>
