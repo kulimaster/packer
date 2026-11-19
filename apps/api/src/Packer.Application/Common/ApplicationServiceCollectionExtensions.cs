@@ -16,6 +16,7 @@ using Packer.Application.Trips.ImportTemplates;
 using Packer.Application.Trips.SetItemPacked;
 using Packer.Application.Trips.SetTripArchived;
 using Packer.Application.Trips.UpdateBag;
+using Packer.Application.Trips.UpdateItem;
 
 namespace Packer.Application.Common;
 
@@ -37,6 +38,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<CreateCategoryHandler>();
         services.AddScoped<CreateItemHandler>();
         services.AddScoped<SetItemPackedHandler>();
+        services.AddScoped<UpdateItemHandler>();
         services.AddScoped<DeleteItemHandler>();
         services.AddScoped<CreateBagHandler>();
         services.AddScoped<UpdateBagHandler>();
@@ -50,6 +52,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IValidator<CreateTripRequest>, CreateTripRequestValidator>();
         services.AddScoped<IValidator<CreateCategoryRequest>, CreateCategoryRequestValidator>();
         services.AddScoped<IValidator<CreateItemRequest>, CreateItemRequestValidator>();
+        services.AddScoped<IValidator<UpdateItemRequest>, UpdateItemRequestValidator>();
         services.AddScoped<IValidator<CreateBagRequest>, CreateBagRequestValidator>();
         services.AddScoped<IValidator<UpdateBagRequest>, UpdateBagRequestValidator>();
         services.AddScoped<IValidator<AssignCategoryBagRequest>, AssignCategoryBagRequestValidator>();

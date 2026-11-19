@@ -8,33 +8,36 @@ import { Input } from '@/components/ui/input';
 import { useI18n, type I18n } from '@/lib/i18n';
 
 /** Schéma se staví až s překladačem – validační hlášky patří do katalogu. */
-function addItemSchema(t: I18n['t']) {
+function itemSchema(t: I18n['t']) {
   return z.object({
     title: z
       .string()
       .trim()
-      .min(1, t('addItem.validation.titleRequired'))
-      .max(120, t('addItem.validation.titleMax')),
+      .min(1, t('itemForm.validation.titleRequired'))
+      .max(120, t('itemForm.validation.titleMax')),
     quantity: z
       .number()
       .int()
-      .min(1, t('addItem.validation.quantityMin'))
-      .max(999, t('addItem.validation.quantityMax')),
+      .min(1, t('itemForm.validation.quantityMin'))
+      .max(999, t('itemForm.validation.quantityMax')),
     weightGrams: z
       .string()
       .trim()
       .refine(
         (value) => value === '' || (/^\d+$/.test(value) && Number(value) <= 100_000),
-        t('addItem.validation.weight'),
+        t('itemForm.validation.weight'),
       ),
     isEssential: z.boolean(),
   });
 }
 
-export type AddItemValues = z.infer<ReturnType<typeof addItemSchema>>;
+export type ItemValues = z.infer<ReturnType<typeof itemSchema>>;
 
-export type AddItemFormProps = {
-  onSubmit: (values: AddItemValues) => void;
+export type ItemFormProps = {
+  /** `edit` mění jen texty tlačítek, pole jsou stejná jako při založení. */
+  mode?: 'create' | 'edit';
+  defaultValues?: Partial<ItemValues>;
+  onSubmit: (values: ItemValues) => void;
   onCancel: () => void;
   pending?: boolean;
   error?: string | null;
@@ -42,26 +45,38 @@ export type AddItemFormProps = {
 };
 
 /**
- * Rychlé přidání položky přímo v kartě kategorie. Vědomě neřeší note a flags –
+ * Formulář položky pro založení i úpravu. Vědomě neřeší note a flags –
  * ty patří do plného editoru, který přijde s úpravami položek.
  */
-export function AddItemForm({
+export function ItemForm({
+  mode = 'create',
+  defaultValues,
   onSubmit,
   onCancel,
   pending = false,
   error,
   fieldErrors = {},
-}: AddItemFormProps) {
+}: ItemFormProps) {
   const { t } = useI18n();
-  const schema = useMemo(() => addItemSchema(t), [t]);
+  const schema = useMemo(() => itemSchema(t), [t]);
 
-  const form = useForm<AddItemValues>({
+  const form = useForm<ItemValues>({
     resolver: zodResolver(schema),
-    defaultValues: { title: '', quantity: 1, weightGrams: '', isEssential: false },
+    defaultValues: {
+      title: '',
+      quantity: 1,
+      weightGrams: '',
+      isEssential: false,
+      ...defaultValues,
+    },
   });
 
-  const fieldError = (field: keyof AddItemValues) =>
+  const fieldError = (field: keyof ItemValues) =>
     fieldErrors[field]?.[0] ?? form.formState.errors[field]?.message;
+
+  const submitLabel = mode === 'edit' ? t('itemForm.submit.edit') : t('itemForm.submit.create');
+  const pendingLabel =
+    mode === 'edit' ? t('itemForm.submitPending.edit') : t('itemForm.submitPending.create');
 
   return (
     <form
@@ -70,8 +85,8 @@ export function AddItemForm({
       className="space-y-3 rounded-input bg-surface-container/60 p-3"
     >
       <Input
-        label={t('addItem.field.item')}
-        placeholder={t('addItem.placeholder.item')}
+        label={t('itemForm.field.title')}
+        placeholder={t('itemForm.placeholder.title')}
         autoFocus
         error={fieldError('title')}
         {...form.register('title')}
@@ -79,7 +94,7 @@ export function AddItemForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Input
-          label={t('addItem.field.quantity')}
+          label={t('itemForm.field.quantity')}
           type="number"
           min={1}
           max={999}
@@ -87,13 +102,13 @@ export function AddItemForm({
           {...form.register('quantity', { valueAsNumber: true })}
         />
         <Input
-          label={t('addItem.field.weight')}
+          label={t('itemForm.field.weight')}
           type="number"
           inputMode="numeric"
           min={0}
           max={100_000}
-          placeholder={t('addItem.placeholder.weight')}
-          hint={t('addItem.hint.weight')}
+          placeholder={t('itemForm.placeholder.weight')}
+          hint={t('itemForm.hint.weight')}
           error={fieldError('weightGrams')}
           {...form.register('weightGrams')}
         />
@@ -101,7 +116,7 @@ export function AddItemForm({
 
       <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-on-surface">
         <Checkbox {...form.register('isEssential')} />
-        {t('addItem.essential')}
+        {t('itemForm.essential')}
       </label>
 
       {error ? (
@@ -115,7 +130,7 @@ export function AddItemForm({
           {t('common.cancel')}
         </Button>
         <Button type="submit" size="sm" disabled={pending}>
-          {pending ? t('addItem.submitPending') : t('addItem.submit')}
+          {pending ? pendingLabel : submitLabel}
         </Button>
       </div>
     </form>

@@ -103,6 +103,124 @@ public sealed class PackingListTests(PackerApiFactory factory) : ApiTestBase(fac
     }
 
     [Fact]
+    public async Task Update_item_changes_details_and_sums()
+    {
+        using var client = CreateClient();
+        await RegisterAsync(client);
+        var trip = await CreateTripAsync(client);
+        var category = await CreateCategoryAsync(client, trip.Id);
+        var item = await CreateItemAsync(client, category.Id, "Passport", weightGrams: 30);
+
+        var response = await PutAsync(client, $"/api/items/{item.Id}", new
+        {
+            title = "Passport + visa",
+            note = "In the front pocket",
+            quantity = 3,
+            isEssential = true,
+            flags = ItemTraits.Fragile.ToString(),
+            weightGrams = 40,
+        });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var updated = await ReadAsync<ItemDetails>(response);
+
+        Assert.Equal(item.Id, updated.Id);
+        Assert.Equal("Passport + visa", updated.Title);
+        Assert.Equal("In the front pocket", updated.Note);
+        Assert.Equal(3, updated.Quantity);
+        Assert.True(updated.IsEssential);
+        Assert.Equal(ItemTraits.Fragile, updated.Flags);
+        Assert.Equal(120, updated.EstimatedWeightGrams);
+
+        var detail = await GetTripAsync(client, trip.Id);
+
+        Assert.Equal(120, detail.EstimatedWeightGrams);
+        Assert.Equal("Passport + visa", Assert.Single(Assert.Single(detail.Categories).Items).Title);
+    }
+
+    [Fact]
+    public async Task Update_item_rejects_zero_quantity_and_keeps_the_old_values()
+    {
+        using var client = CreateClient();
+        await RegisterAsync(client);
+        var trip = await CreateTripAsync(client);
+        var category = await CreateCategoryAsync(client, trip.Id);
+        var item = await CreateItemAsync(client, category.Id, "Passport");
+
+        var response = await PutAsync(client, $"/api/items/{item.Id}", new
+        {
+            title = "Broken",
+            quantity = 0,
+            flags = ItemTraits.None.ToString(),
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var error = await ReadAsync<ErrorBody>(response);
+
+        Assert.Equal("validation_failed", error.Code);
+        Assert.Contains("quantity", error.Errors!.Keys);
+
+        var detail = await GetTripAsync(client, trip.Id);
+
+        Assert.Equal("Passport", Assert.Single(Assert.Single(detail.Categories).Items).Title);
+    }
+
+    [Fact]
+    public async Task Update_item_is_rejected_on_archived_trip()
+    {
+        using var client = CreateClient();
+        await RegisterAsync(client);
+        var trip = await CreateTripAsync(client);
+        var category = await CreateCategoryAsync(client, trip.Id);
+        var item = await CreateItemAsync(client, category.Id);
+
+        await ArchiveAsync(client, trip.Id);
+
+        var response = await PutAsync(client, $"/api/items/{item.Id}", new
+        {
+            title = "Renamed",
+            quantity = 1,
+            flags = ItemTraits.None.ToString(),
+        });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("trip_archived", (await ReadAsync<ErrorBody>(response)).Code);
+    }
+
+    [Fact]
+    public async Task Update_item_round_trips_combined_flags()
+    {
+        using var client = CreateClient();
+        await RegisterAsync(client);
+        var trip = await CreateTripAsync(client);
+        var category = await CreateCategoryAsync(client, trip.Id);
+        var item = await CreateItemAsync(client, category.Id, "Power bank");
+
+        // Přesně to, co posílá frontend: bitová maska jako string s čárkou.
+        var response = await PutAsync(client, $"/api/items/{item.Id}", new
+        {
+            title = "Power bank",
+            quantity = 1,
+            isEssential = false,
+            flags = "Fragile, Battery",
+            weightGrams = 240,
+        });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var updated = await ReadAsync<ItemDetails>(response);
+        var expected = ItemTraits.Fragile | ItemTraits.Battery;
+
+        Assert.Equal(expected, updated.Flags);
+
+        var detail = await GetTripAsync(client, trip.Id);
+
+        Assert.Equal(expected, Assert.Single(Assert.Single(detail.Categories).Items).Flags);
+    }
+
+    [Fact]
     public async Task Delete_item_keeps_the_category()
     {
         using var client = CreateClient();
@@ -209,6 +327,16 @@ public sealed class PackingListTests(PackerApiFactory factory) : ApiTestBase(fac
 
         Assert.Equal(HttpStatusCode.NotFound, packed.StatusCode);
         Assert.Equal("item_not_found", (await ReadAsync<ErrorBody>(packed)).Code);
+
+        var updated = await PutAsync(stranger, $"/api/items/{item.Id}", new
+        {
+            title = "Sneaky",
+            quantity = 1,
+            flags = ItemTraits.None.ToString(),
+        });
+
+        Assert.Equal(HttpStatusCode.NotFound, updated.StatusCode);
+        Assert.Equal("item_not_found", (await ReadAsync<ErrorBody>(updated)).Code);
 
         var deleted = await DeleteAsync(stranger, $"/api/items/{item.Id}");
 

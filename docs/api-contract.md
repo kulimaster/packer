@@ -48,6 +48,7 @@ Skript stáhne spec a přepíše `src/lib/api/schema.d.ts`.
 | `PATCH` | `/api/trips/{tripId}/archived` | archivace / obnovení, `204`; archivovaný výlet je jen ke čtení |
 | `POST` | `/api/trips/{tripId}/categories` | nová kategorie, `201` |
 | `POST` | `/api/categories/{categoryId}/items` | nová položka v kategorii, `201` |
+| `PUT` | `/api/items/{itemId}` | úprava položky (název, poznámka, počet, essential, vlastnosti, hmotnost), `200` |
 | `PATCH` | `/api/items/{itemId}/packed` | přebalení / vrácení položky, `200` |
 | `DELETE` | `/api/items/{itemId}` | smazání položky, `204` |
 | `POST` | `/api/trips/{tripId}/bags` | nový bag, `201` |

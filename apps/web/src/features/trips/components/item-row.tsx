@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { BadgeTone } from '@/components/ui/badge.variants';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -36,6 +36,8 @@ function traitKeys(flags: string): string[] {
 type ItemRowProps = {
   item: PackingItem;
   onTogglePacked?: (isPacked: boolean) => void;
+  /** Otevře formulář úprav; bez callbacku se tužka nezobrazí. */
+  onEdit?: () => void;
   onDelete?: () => void;
   /** Během ukládání se řádek nepočítá jako interaktivní. */
   pending?: boolean;
@@ -45,6 +47,7 @@ type ItemRowProps = {
 export function ItemRow({
   item,
   onTogglePacked,
+  onEdit,
   onDelete,
   pending = false,
   className,
@@ -109,6 +112,18 @@ export function ItemRow({
         <span className="mt-0.5 shrink-0 text-xs tabular-nums text-on-surface-variant">
           {formatWeight(item.estimatedWeightGrams, locale)}
         </span>
+      ) : null}
+
+      {onEdit ? (
+        <button
+          type="button"
+          onClick={onEdit}
+          disabled={pending}
+          aria-label={t('item.edit', { title: item.title })}
+          className="mt-0.5 shrink-0 rounded-full p-1.5 text-muted transition-colors hover:bg-surface-container hover:text-on-surface focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50"
+        >
+          <Pencil className="size-4" aria-hidden />
+        </button>
       ) : null}
 
       {onDelete ? (

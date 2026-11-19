@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { AddItemForm } from './add-item-form';
+import { ItemForm } from './item-form';
 
 const meta = {
-  title: 'Features/AddItemForm',
-  component: AddItemForm,
+  title: 'Features/ItemForm',
+  component: ItemForm,
   args: {
     onSubmit: () => undefined,
     onCancel: () => undefined,
@@ -16,15 +16,31 @@ const meta = {
     ),
   ],
   parameters: { layout: 'centered' },
-} satisfies Meta<typeof AddItemForm>;
+} satisfies Meta<typeof ItemForm>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+/** Úprava existující položky – formulář je předplněný a tlačítko říká „Uložit“. */
+export const Edit: Story = {
+  args: {
+    mode: 'edit',
+    defaultValues: { title: 'Passport', quantity: 2, weightGrams: '30', isEssential: true },
+  },
+};
+
 export const Pending: Story = {
   args: { pending: true },
+};
+
+export const EditPending: Story = {
+  args: {
+    mode: 'edit',
+    pending: true,
+    defaultValues: { title: 'Passport', quantity: 2, weightGrams: '30' },
+  },
 };
 
 export const Error: Story = {

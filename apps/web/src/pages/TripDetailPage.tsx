@@ -34,6 +34,7 @@ import {
   useSetTripArchived,
   useTrip,
   useUpdateBag,
+  useUpdateItem,
   type BagInput,
   type TripDetailsDto,
 } from '@/features/trips/api';
@@ -41,10 +42,10 @@ import {
   AddCategoryForm,
   type AddCategoryValues,
 } from '@/features/trips/components/add-category-form';
-import type { AddItemValues } from '@/features/trips/components/add-item-form';
 import type { BagValues } from '@/features/trips/components/bag-form';
 import { BagsPanel } from '@/features/trips/components/bags-panel';
 import { CategoryCard } from '@/features/trips/components/category-card';
+import type { ItemValues } from '@/features/trips/components/item-form';
 import { tripStatusMessageKey, tripStatusTone } from '@/features/trips/trip-status';
 import { getCover } from '@/features/trips/covers';
 import { formatWeight } from '@/features/trips/format';
@@ -95,6 +96,7 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
   const createCategory = useCreateCategory(tripId);
   const createItem = useCreateItem(tripId);
   const setPacked = useSetItemPacked(tripId);
+  const updateItem = useUpdateItem(tripId);
   const deleteItem = useDeleteItem(tripId);
   const createBag = useCreateBag(tripId);
   const updateBag = useUpdateBag(tripId);
@@ -131,7 +133,7 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
     );
   };
 
-  const handleAddItem = (categoryId: string, values: AddItemValues) => {
+  const handleAddItem = (categoryId: string, values: ItemValues) => {
     createItem.mutate(
       {
         categoryId,
@@ -142,6 +144,26 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
       },
       { onSuccess: () => setAddingItemCategoryId(null) },
     );
+  };
+
+  /**
+   * Poznámku a vlastnosti (flags) formulář neumí – posíláme je beze změny,
+   * ať je úprava názvu nebo počtu nesmaže.
+   */
+  const handleUpdateItem = (itemId: string, values: ItemValues) => {
+    const item = categories
+      .flatMap((category) => category.items)
+      .find((entry) => entry.id === itemId);
+
+    return updateItem.mutateAsync({
+      itemId,
+      title: values.title,
+      note: item?.note ?? null,
+      quantity: values.quantity,
+      isEssential: values.isEssential,
+      flags: item?.flags ?? 'None',
+      weightGrams: values.weightGrams === '' ? null : Number(values.weightGrams),
+    });
   };
 
   const handleToggleItem = (itemId: string, isPacked: boolean) => {
@@ -350,6 +372,12 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
                 }
                 addFieldErrors={
                   createItem.error instanceof ApiError ? createItem.error.fieldErrors : {}
+                }
+                onUpdateItem={archived ? undefined : handleUpdateItem}
+                onStartEditingItem={() => updateItem.reset()}
+                updateItemError={errorText(updateItem.error, t)}
+                updateItemFieldErrors={
+                  updateItem.error instanceof ApiError ? updateItem.error.fieldErrors : {}
                 }
                 onToggleItem={archived ? undefined : handleToggleItem}
                 onDeleteItem={archived ? undefined : handleDeleteItem}

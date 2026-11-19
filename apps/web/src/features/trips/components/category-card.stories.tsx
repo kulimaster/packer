@@ -68,6 +68,7 @@ const meta = {
     onStartAdding: () => undefined,
     onCancelAdding: () => undefined,
     onAddItem: () => undefined,
+    onUpdateItem: () => Promise.resolve(),
     onToggleItem: () => undefined,
     onDeleteItem: () => undefined,
   },
@@ -131,6 +132,20 @@ export const AddingError: Story = {
 
 export const PendingItem: Story = {
   args: { pendingItemId: '2' },
+};
+
+/** Klikni na tužku u řádku – formulář úpravy se otevře místo řádku. */
+export const EditingItem: Story = {
+  args: {
+    category: { ...carryOn, items: [{ ...carryOn.items[1]!, note: 'Charged to 100 %' }] },
+  },
+};
+
+export const UpdatingItemError: Story = {
+  args: {
+    updateItemError: 'Item could not be saved.',
+    updateItemFieldErrors: { quantity: ['At most 999.'] },
+  },
 };
 
 export const UnknownIcon: Story = {

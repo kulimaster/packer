@@ -173,6 +173,37 @@ export function useSetItemPacked(tripId: string) {
   });
 }
 
+export type UpdateItemInput = {
+  itemId: string;
+  title: string;
+  note: string | null;
+  quantity: number;
+  isEssential: boolean;
+  /** Bitová maska z API jako string (`None`, `Fragile, Battery`). */
+  flags: string;
+  weightGrams: number | null;
+};
+
+export function useUpdateItem(tripId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ itemId, ...body }: UpdateItemInput): Promise<ItemDto> => {
+      const { data, error, response } = await api.PUT('/api/items/{itemId}', {
+        params: { path: { itemId } },
+        body,
+      });
+
+      if (!data) {
+        throw toApiError(error, response.status);
+      }
+
+      return data;
+    },
+    onSuccess: () => invalidateTrip(queryClient, tripId),
+  });
+}
+
 export function useDeleteItem(tripId: string) {
   const queryClient = useQueryClient();
 

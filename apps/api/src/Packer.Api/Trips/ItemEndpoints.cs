@@ -3,6 +3,7 @@ using Packer.Application.Trips;
 using Packer.Application.Trips.CreateItem;
 using Packer.Application.Trips.DeleteItem;
 using Packer.Application.Trips.SetItemPacked;
+using Packer.Application.Trips.UpdateItem;
 
 namespace Packer.Api.Trips;
 
@@ -44,6 +45,23 @@ internal static class ItemEndpoints
             return Results.Ok(item);
         })
             .Produces<ItemDetails>(StatusCodes.Status200OK)
+            .Produces<ApiError>(StatusCodes.Status401Unauthorized)
+            .Produces<ApiError>(StatusCodes.Status404NotFound)
+            .Produces<ApiError>(StatusCodes.Status409Conflict)
+            .AddEndpointFilter<AntiforgeryFilter>();
+
+        items.MapPut("/{itemId:guid}", async (
+            Guid itemId,
+            UpdateItemRequest request,
+            UpdateItemHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            var item = await handler.HandleAsync(itemId, request, cancellationToken);
+
+            return Results.Ok(item);
+        })
+            .Produces<ItemDetails>(StatusCodes.Status200OK)
+            .Produces<ApiError>(StatusCodes.Status400BadRequest)
             .Produces<ApiError>(StatusCodes.Status401Unauthorized)
             .Produces<ApiError>(StatusCodes.Status404NotFound)
             .Produces<ApiError>(StatusCodes.Status409Conflict)

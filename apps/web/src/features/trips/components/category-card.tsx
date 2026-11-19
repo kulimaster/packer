@@ -1,4 +1,5 @@
 import { Plus } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/progress-bar';
@@ -6,8 +7,8 @@ import { Select } from '@/components/ui/select';
 import { useI18n } from '@/lib/i18n';
 import { formatWeight } from '../format';
 import { categoryIcons, type CategoryIconKey } from '../icons';
-import { AddItemForm, type AddItemValues } from './add-item-form';
 import type { PackingBag } from './bag-card';
+import { ItemForm, type ItemValues } from './item-form';
 import { ItemRow, type PackingItem } from './item-row';
 
 export type PackingCategory = {
@@ -35,10 +36,16 @@ export type CategoryCardProps = {
   adding?: boolean;
   onStartAdding?: () => void;
   onCancelAdding?: () => void;
-  onAddItem?: (values: AddItemValues) => void;
+  onAddItem?: (values: ItemValues) => void;
   addingPending?: boolean;
   addError?: string | null;
   addFieldErrors?: Record<string, string[]>;
+  /** Úprava položky; bez callbacku se tužka u řádku nezobrazí. */
+  onUpdateItem?: (itemId: string, values: ItemValues) => Promise<unknown>;
+  /** Zavolá se před otevřením formuláře – stránka tu resetuje chybu poslední mutace. */
+  onStartEditingItem?: () => void;
+  updateItemError?: string | null;
+  updateItemFieldErrors?: Record<string, string[]>;
   onToggleItem?: (itemId: string, isPacked: boolean) => void;
   onDeleteItem?: (itemId: string) => void;
   pendingItemId?: string | null;
@@ -58,6 +65,10 @@ export function CategoryCard({
   addingPending = false,
   addError,
   addFieldErrors,
+  onUpdateItem,
+  onStartEditingItem,
+  updateItemError,
+  updateItemFieldErrors,
   onToggleItem,
   onDeleteItem,
   pendingItemId,
@@ -65,6 +76,22 @@ export function CategoryCard({
 }: CategoryCardProps) {
   const { t, locale } = useI18n();
   const Icon = categoryIcons[category.icon as CategoryIconKey] ?? categoryIcons.backpack;
+  // Který řádek je otevřený v editaci drží karta – je to čistě UI stav.
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [savingItem, setSavingItem] = useState(false);
+
+  const handleUpdateItem = async (itemId: string, values: ItemValues) => {
+    setSavingItem(true);
+
+    try {
+      await onUpdateItem?.(itemId, values);
+      setEditingItemId(null);
+    } catch {
+      // Chybu zobrazí formulář – tu samou mutaci drží stránka a předává ji v props.
+    } finally {
+      setSavingItem(false);
+    }
+  };
 
   return (
     <Card className={className}>
@@ -124,17 +151,39 @@ export function CategoryCard({
 
       {category.items.length > 0 ? (
         <ul className="divide-y divide-outline px-2 py-1">
-          {category.items.map((item) => (
-            <ItemRow
-              key={item.id}
-              item={item}
-              pending={pendingItemId === item.id}
-              onTogglePacked={
-                onToggleItem ? (isPacked) => onToggleItem(item.id, isPacked) : undefined
-              }
-              onDelete={onDeleteItem ? () => onDeleteItem(item.id) : undefined}
-            />
-          ))}
+          {category.items.map((item) =>
+            editingItemId === item.id ? (
+              <li key={item.id} className="py-2">
+                <ItemForm
+                  mode="edit"
+                  defaultValues={toItemValues(item)}
+                  onSubmit={(values) => handleUpdateItem(item.id, values)}
+                  onCancel={() => setEditingItemId(null)}
+                  pending={savingItem}
+                  error={updateItemError}
+                  fieldErrors={updateItemFieldErrors}
+                />
+              </li>
+            ) : (
+              <ItemRow
+                key={item.id}
+                item={item}
+                pending={pendingItemId === item.id}
+                onTogglePacked={
+                  onToggleItem ? (isPacked) => onToggleItem(item.id, isPacked) : undefined
+                }
+                onEdit={
+                  onUpdateItem && !readOnly
+                    ? () => {
+                        onStartEditingItem?.();
+                        setEditingItemId(item.id);
+                      }
+                    : undefined
+                }
+                onDelete={onDeleteItem ? () => onDeleteItem(item.id) : undefined}
+              />
+            ),
+          )}
         </ul>
       ) : (
         <p className="px-4 py-5 text-sm text-on-surface-variant">{t('category.empty')}</p>
@@ -143,7 +192,7 @@ export function CategoryCard({
       {readOnly ? null : (
         <div className="px-4 py-3">
           {adding ? (
-            <AddItemForm
+            <ItemForm
               onSubmit={(values) => onAddItem?.(values)}
               onCancel={() => onCancelAdding?.()}
               pending={addingPending}
@@ -160,4 +209,14 @@ export function CategoryCard({
       )}
     </Card>
   );
+}
+
+/** Hodnoty pro formulář úpravy – prázdné pole znamená „bez hmotnosti“, ne nula gramů. */
+function toItemValues(item: PackingItem): Partial<ItemValues> {
+  return {
+    title: item.title,
+    quantity: item.quantity,
+    weightGrams: item.weightGrams === undefined ? '' : String(item.weightGrams),
+    isEssential: item.isEssential,
+  };
 }
