@@ -310,6 +310,20 @@ public sealed class PackingListTests(PackerApiFactory factory) : ApiTestBase(fac
         Assert.Equal(HttpStatusCode.NotFound, newCategory.StatusCode);
         Assert.Equal("trip_not_found", (await ReadAsync<ErrorBody>(newCategory)).Code);
 
+        var renamedCategory = await PutAsync(stranger, $"/api/categories/{category.Id}", new
+        {
+            name = "Sneaky",
+            icon = "health",
+        });
+
+        Assert.Equal(HttpStatusCode.NotFound, renamedCategory.StatusCode);
+        Assert.Equal("category_not_found", (await ReadAsync<ErrorBody>(renamedCategory)).Code);
+
+        var deletedCategory = await DeleteAsync(stranger, $"/api/categories/{category.Id}");
+
+        Assert.Equal(HttpStatusCode.NotFound, deletedCategory.StatusCode);
+        Assert.Equal("category_not_found", (await ReadAsync<ErrorBody>(deletedCategory)).Code);
+
         var newItem = await PostAsync(stranger, $"/api/categories/{category.Id}/items", new
         {
             title = "Sneaky",

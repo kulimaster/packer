@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { useI18n } from '@/lib/i18n';
 import { formatWeight } from '../format';
 import { categoryIcons, type CategoryIconKey } from '../icons';
 import type { PackingBag } from './bag-card';
+import { CategoryForm, type CategoryValues } from './category-form';
 import { ItemForm, type ItemValues } from './item-form';
 import { ItemRow, type PackingItem } from './item-row';
 
@@ -18,6 +19,8 @@ export type PackingCategory = {
   note?: string;
   /** Bag, do kterého kategorie patří; `undefined` = zatím nikam. */
   bagId?: string;
+  /** Limity se v UI needitují, ale úprava je musí poslat zpátky beze změny. */
+  maxWeightKg?: number;
   packed: number;
   total: number;
   estimatedWeightGrams: number;
@@ -49,6 +52,13 @@ export type CategoryCardProps = {
   onToggleItem?: (itemId: string, isPacked: boolean) => void;
   onDeleteItem?: (itemId: string) => void;
   pendingItemId?: string | null;
+  /** Úprava a mazání kategorie; bez callbacků se v hlavičce neukážou ikony. */
+  onUpdateCategory?: (values: CategoryValues) => Promise<unknown>;
+  onStartEditingCategory?: () => void;
+  updateCategoryError?: string | null;
+  updateCategoryFieldErrors?: Record<string, string[]>;
+  onDeleteCategory?: () => void;
+  categoryPending?: boolean;
   className?: string;
 };
 
@@ -72,6 +82,12 @@ export function CategoryCard({
   onToggleItem,
   onDeleteItem,
   pendingItemId,
+  onUpdateCategory,
+  onStartEditingCategory,
+  updateCategoryError,
+  updateCategoryFieldErrors,
+  onDeleteCategory,
+  categoryPending = false,
   className,
 }: CategoryCardProps) {
   const { t, locale } = useI18n();
@@ -79,6 +95,21 @@ export function CategoryCard({
   // Který řádek je otevřený v editaci drží karta – je to čistě UI stav.
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [savingItem, setSavingItem] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(false);
+  const [savingCategory, setSavingCategory] = useState(false);
+
+  const handleUpdateCategory = async (values: CategoryValues) => {
+    setSavingCategory(true);
+
+    try {
+      await onUpdateCategory?.(values);
+      setEditingCategory(false);
+    } catch {
+      // Chybu zobrazí formulář – mutaci drží stránka a předává ji v props.
+    } finally {
+      setSavingCategory(false);
+    }
+  };
 
   const handleUpdateItem = async (itemId: string, values: ItemValues) => {
     setSavingItem(true);
@@ -95,59 +126,110 @@ export function CategoryCard({
 
   return (
     <Card className={className}>
-      <div className="flex items-start gap-3 border-b border-outline px-4 py-4">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-tertiary text-primary">
-          <Icon className="size-5" aria-hidden />
-        </span>
+      {editingCategory ? (
+        <div className="px-3 py-3">
+          <CategoryForm
+            mode="edit"
+            defaultValues={{
+              name: category.name,
+              icon: category.icon,
+              note: category.note ?? '',
+            }}
+            onSubmit={handleUpdateCategory}
+            onCancel={() => setEditingCategory(false)}
+            pending={savingCategory}
+            error={updateCategoryError}
+            fieldErrors={updateCategoryFieldErrors}
+          />
+        </div>
+      ) : (
+        <div className="flex items-start gap-3 border-b border-outline px-4 py-4">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-tertiary text-primary">
+            <Icon className="size-5" aria-hidden />
+          </span>
 
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline justify-between gap-3">
-            <h3 className="truncate text-base font-bold tracking-tight">{category.name}</h3>
-            <span className="shrink-0 text-xs font-semibold tabular-nums text-on-surface-variant">
-              {category.packed} / {category.total}
-            </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-baseline justify-between gap-3">
+              <h3 className="truncate text-base font-bold tracking-tight">{category.name}</h3>
+              <span className="shrink-0 text-xs font-semibold tabular-nums text-on-surface-variant">
+                {category.packed} / {category.total}
+              </span>
+            </div>
+
+            {category.note ? (
+              <p className="mt-0.5 truncate text-xs text-on-surface-variant">{category.note}</p>
+            ) : null}
+
+            <ProgressBar
+              className="mt-2"
+              size="sm"
+              value={category.packed}
+              max={category.total > 0 ? category.total : 1}
+              label={t('category.progress', { name: category.name })}
+            />
+
+            {!readOnly && onAssignBag && bags.length > 0 ? (
+              <div className="mt-2">
+                <Select
+                  aria-label={t('category.bagSelect', { name: category.name })}
+                  className="h-8 py-0 text-xs"
+                  value={category.bagId ?? ''}
+                  disabled={bagAssignPending}
+                  onChange={(event) =>
+                    onAssignBag(event.target.value === '' ? null : event.target.value)
+                  }
+                >
+                  <option value="">{t('category.noBag')}</option>
+                  {bags.map((bag) => (
+                    <option key={bag.id} value={bag.id}>
+                      {bag.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            ) : null}
           </div>
 
-          {category.note ? (
-            <p className="mt-0.5 truncate text-xs text-on-surface-variant">{category.note}</p>
-          ) : null}
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            {category.estimatedWeightGrams > 0 ? (
+              <span className="mt-1 text-xs tabular-nums text-on-surface-variant">
+                {formatWeight(category.estimatedWeightGrams, locale)}
+              </span>
+            ) : null}
 
-          <ProgressBar
-            className="mt-2"
-            size="sm"
-            value={category.packed}
-            max={category.total > 0 ? category.total : 1}
-            label={t('category.progress', { name: category.name })}
-          />
+            {onUpdateCategory || onDeleteCategory ? (
+              <div className="flex items-center gap-1">
+                {onUpdateCategory && !readOnly ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onStartEditingCategory?.();
+                      setEditingCategory(true);
+                    }}
+                    disabled={categoryPending}
+                    aria-label={t('category.edit', { name: category.name })}
+                    className="rounded-full p-1.5 text-muted transition-colors hover:bg-surface-container hover:text-on-surface focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    <Pencil className="size-4" aria-hidden />
+                  </button>
+                ) : null}
 
-          {!readOnly && onAssignBag && bags.length > 0 ? (
-            <div className="mt-2">
-              <Select
-                aria-label={t('category.bagSelect', { name: category.name })}
-                className="h-8 py-0 text-xs"
-                value={category.bagId ?? ''}
-                disabled={bagAssignPending}
-                onChange={(event) =>
-                  onAssignBag(event.target.value === '' ? null : event.target.value)
-                }
-              >
-                <option value="">{t('category.noBag')}</option>
-                {bags.map((bag) => (
-                  <option key={bag.id} value={bag.id}>
-                    {bag.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
-          ) : null}
+                {onDeleteCategory && !readOnly ? (
+                  <button
+                    type="button"
+                    onClick={onDeleteCategory}
+                    disabled={categoryPending}
+                    aria-label={t('category.delete', { name: category.name })}
+                    className="rounded-full p-1.5 text-muted transition-colors hover:bg-danger-bg hover:text-danger-fg focus-visible:ring-2 focus-visible:ring-danger focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    <Trash2 className="size-4" aria-hidden />
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
         </div>
-
-        {category.estimatedWeightGrams > 0 ? (
-          <span className="mt-1 shrink-0 text-xs tabular-nums text-on-surface-variant">
-            {formatWeight(category.estimatedWeightGrams, locale)}
-          </span>
-        ) : null}
-      </div>
+      )}
 
       {category.items.length > 0 ? (
         <ul className="divide-y divide-outline px-2 py-1">

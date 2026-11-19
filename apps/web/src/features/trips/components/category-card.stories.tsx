@@ -71,6 +71,8 @@ const meta = {
     onUpdateItem: () => Promise.resolve(),
     onToggleItem: () => undefined,
     onDeleteItem: () => undefined,
+    onUpdateCategory: () => Promise.resolve(),
+    onDeleteCategory: () => undefined,
   },
   decorators: [
     (Story) => (

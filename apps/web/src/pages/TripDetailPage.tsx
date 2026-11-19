@@ -29,19 +29,18 @@ import {
   useCreateCategory,
   useCreateItem,
   useDeleteBag,
+  useDeleteCategory,
   useDeleteItem,
   useSetItemPacked,
   useSetTripArchived,
   useTrip,
   useUpdateBag,
+  useUpdateCategory,
   useUpdateItem,
   type BagInput,
   type TripDetailsDto,
 } from '@/features/trips/api';
-import {
-  AddCategoryForm,
-  type AddCategoryValues,
-} from '@/features/trips/components/add-category-form';
+import { CategoryForm, type CategoryValues } from '@/features/trips/components/category-form';
 import type { BagValues } from '@/features/trips/components/bag-form';
 import { BagsPanel } from '@/features/trips/components/bags-panel';
 import { CategoryCard } from '@/features/trips/components/category-card';
@@ -94,6 +93,8 @@ export function TripDetailPage() {
 function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: string }) {
   const { t, locale } = useI18n();
   const createCategory = useCreateCategory(tripId);
+  const updateCategory = useUpdateCategory(tripId);
+  const deleteCategory = useDeleteCategory(tripId);
   const createItem = useCreateItem(tripId);
   const setPacked = useSetItemPacked(tripId);
   const updateItem = useUpdateItem(tripId);
@@ -126,11 +127,24 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
   const bags = trip.bags.map(toPackingBag);
   const archived = trip.isArchived;
 
-  const handleAddCategory = (values: AddCategoryValues) => {
+  const handleAddCategory = (values: CategoryValues) => {
     createCategory.mutate(
       { name: values.name, icon: values.icon, note: values.note || undefined },
       { onSuccess: () => setAddingCategory(false) },
     );
+  };
+
+  /** Limit hmotnosti formulář neřeší – posíláme současný, ať ho úprava nevynuluje. */
+  const handleUpdateCategory = (categoryId: string, values: CategoryValues) => {
+    const category = categories.find((candidate) => candidate.id === categoryId);
+
+    return updateCategory.mutateAsync({
+      categoryId,
+      name: values.name,
+      icon: values.icon,
+      note: values.note || undefined,
+      maxWeightKg: category?.maxWeightKg ?? null,
+    });
   };
 
   const handleAddItem = (categoryId: string, values: ItemValues) => {
@@ -382,6 +396,16 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
                 onToggleItem={archived ? undefined : handleToggleItem}
                 onDeleteItem={archived ? undefined : handleDeleteItem}
                 pendingItemId={pendingItemId}
+                onUpdateCategory={
+                  archived ? undefined : (values) => handleUpdateCategory(category.id, values)
+                }
+                onStartEditingCategory={() => updateCategory.reset()}
+                updateCategoryError={errorText(updateCategory.error, t)}
+                updateCategoryFieldErrors={
+                  updateCategory.error instanceof ApiError ? updateCategory.error.fieldErrors : {}
+                }
+                onDeleteCategory={archived ? undefined : () => deleteCategory.mutate(category.id)}
+                categoryPending={updateCategory.isPending || deleteCategory.isPending}
               />
             ))
           ) : (
@@ -409,7 +433,7 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
           )}
 
           {!archived && addingCategory ? (
-            <AddCategoryForm
+            <CategoryForm
               onSubmit={handleAddCategory}
               onCancel={() => setAddingCategory(false)}
               pending={createCategory.isPending}

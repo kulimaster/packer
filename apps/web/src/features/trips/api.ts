@@ -113,6 +113,57 @@ export function useCreateCategory(tripId: string) {
   });
 }
 
+export type UpdateCategoryInput = {
+  categoryId: string;
+  name: string;
+  icon: string;
+  note?: string;
+  /** Limit se v UI needituje – posíláme současnou hodnotu, ať ji úprava nesmaže. */
+  maxWeightKg: number | null;
+};
+
+export function useUpdateCategory(tripId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ categoryId, ...input }: UpdateCategoryInput): Promise<CategoryDto> => {
+      const { data, error, response } = await api.PUT('/api/categories/{categoryId}', {
+        params: { path: { categoryId } },
+        body: {
+          name: input.name,
+          icon: input.icon,
+          note: input.note || null,
+          maxWeightKg: input.maxWeightKg,
+        },
+      });
+
+      if (!data) {
+        throw toApiError(error, response.status);
+      }
+
+      return data;
+    },
+    onSuccess: () => invalidateTrip(queryClient, tripId),
+  });
+}
+
+export function useDeleteCategory(tripId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (categoryId: string): Promise<void> => {
+      const { error, response } = await api.DELETE('/api/categories/{categoryId}', {
+        params: { path: { categoryId } },
+      });
+
+      if (error) {
+        throw toApiError(error, response.status);
+      }
+    },
+    onSuccess: () => invalidateTrip(queryClient, tripId),
+  });
+}
+
 export type CreateItemInput = {
   categoryId: string;
   title: string;
@@ -416,6 +467,7 @@ export function toPackingCategory(category: CategoryDto): PackingCategory {
     icon: category.icon,
     note: category.note ?? undefined,
     bagId: category.bagId ?? undefined,
+    maxWeightKg: category.maxWeightKg === null ? undefined : Number(category.maxWeightKg),
     packed: Number(category.packedCount),
     total: Number(category.totalCount),
     estimatedWeightGrams: Number(category.estimatedWeightGrams),
