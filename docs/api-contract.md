@@ -45,6 +45,8 @@ Skript stáhne spec a přepíše `src/lib/api/schema.d.ts`.
 | `GET` | `/api/trips?includeArchived=false` | seznam výletů s počty položek a odvozeným stavem |
 | `POST` | `/api/trips` | založení výletu, `201` + `Location` |
 | `GET` | `/api/trips/{tripId}` | detail výletu: kategorie, položky, bagy, součty |
+| `PUT` | `/api/trips/{tripId}` | úprava výletu (název, cíl, termín, cover), `200`; archivovaný vrátí `409` |
+| `DELETE` | `/api/trips/{tripId}` | smazání výletu i s balicím seznamem, `204` (funguje i pro archivovaný) |
 | `PATCH` | `/api/trips/{tripId}/archived` | archivace / obnovení, `204`; archivovaný výlet je jen ke čtení |
 | `POST` | `/api/trips/{tripId}/categories` | nová kategorie, `201` |
 | `PUT` | `/api/categories/{categoryId}` | úprava kategorie (název, ikona, poznámka, limit), `200` |

@@ -1,9 +1,11 @@
 using Packer.Api.Common;
 using Packer.Application.Trips;
 using Packer.Application.Trips.CreateTrip;
+using Packer.Application.Trips.DeleteTrip;
 using Packer.Application.Trips.GetTrip;
 using Packer.Application.Trips.GetTrips;
 using Packer.Application.Trips.SetTripArchived;
+using Packer.Application.Trips.UpdateTrip;
 
 namespace Packer.Api.Trips;
 
@@ -53,6 +55,37 @@ internal static class TripEndpoints
             .Produces<TripSummary>(StatusCodes.Status201Created)
             .Produces<ApiError>(StatusCodes.Status400BadRequest)
             .Produces<ApiError>(StatusCodes.Status401Unauthorized)
+            .AddEndpointFilter<AntiforgeryFilter>();
+
+        group.MapPut("/{tripId:guid}", async (
+            Guid tripId,
+            UpdateTripRequest request,
+            UpdateTripHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            var trip = await handler.HandleAsync(tripId, request, cancellationToken);
+
+            return Results.Ok(trip);
+        })
+            .Produces<TripSummary>(StatusCodes.Status200OK)
+            .Produces<ApiError>(StatusCodes.Status400BadRequest)
+            .Produces<ApiError>(StatusCodes.Status401Unauthorized)
+            .Produces<ApiError>(StatusCodes.Status404NotFound)
+            .Produces<ApiError>(StatusCodes.Status409Conflict)
+            .AddEndpointFilter<AntiforgeryFilter>();
+
+        group.MapDelete("/{tripId:guid}", async (
+            Guid tripId,
+            DeleteTripHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            await handler.HandleAsync(tripId, cancellationToken);
+
+            return Results.NoContent();
+        })
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces<ApiError>(StatusCodes.Status401Unauthorized)
+            .Produces<ApiError>(StatusCodes.Status404NotFound)
             .AddEndpointFilter<AntiforgeryFilter>();
 
         group.MapPatch("/{tripId:guid}/archived", async (

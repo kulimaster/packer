@@ -75,6 +75,8 @@ export const cs = {
   'tripForm.placeholder.destination': 'Tokio a Kjóto, Japonsko',
   'tripForm.submit': 'Vytvořit výlet',
   'tripForm.submitPending': 'Vytvářím…',
+  'tripForm.submit.edit': 'Uložit výlet',
+  'tripForm.submitPending.edit': 'Ukládám…',
   'tripForm.validation.titleRequired': 'Název je povinný.',
   'tripForm.validation.titleMax': 'Použij nejvýš 120 znaků.',
   'tripForm.validation.destinationMax': 'Použij nejvýš 160 znaků.',
@@ -225,6 +227,11 @@ export const cs = {
   'tripDetail.error.title': 'Výlet se nepodařilo načíst',
   'tripDetail.back': 'Zpět na výlety',
   'tripDetail.allTrips': 'Všechny výlety',
+  'tripDetail.edit': 'Upravit výlet',
+  'tripDetail.delete': 'Smazat výlet',
+  'tripDetail.deleteConfirm.body':
+    'Smazat výlet „{title}“ i s celým balicím seznamem? Tohle nejde vzít zpět.',
+  'tripDetail.deleteConfirm.confirm': 'Smazat navždy',
   'tripDetail.archive': 'Archivovat výlet',
   'tripDetail.restore': 'Obnovit výlet',
   'tripDetail.archivedNotice':

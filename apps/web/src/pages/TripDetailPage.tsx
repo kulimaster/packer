@@ -5,12 +5,14 @@ import {
   Backpack,
   Calendar,
   MapPin,
+  Pencil,
   Plus,
   Scale,
   Sparkles,
+  Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -31,12 +33,14 @@ import {
   useDeleteBag,
   useDeleteCategory,
   useDeleteItem,
+  useDeleteTrip,
   useSetItemPacked,
   useSetTripArchived,
   useTrip,
   useUpdateBag,
   useUpdateCategory,
   useUpdateItem,
+  useUpdateTrip,
   type BagInput,
   type TripDetailsDto,
 } from '@/features/trips/api';
@@ -45,6 +49,7 @@ import type { BagValues } from '@/features/trips/components/bag-form';
 import { BagsPanel } from '@/features/trips/components/bags-panel';
 import { CategoryCard } from '@/features/trips/components/category-card';
 import type { ItemValues } from '@/features/trips/components/item-form';
+import { TripForm, type TripValues } from '@/features/trips/components/trip-form';
 import { tripStatusMessageKey, tripStatusTone } from '@/features/trips/trip-status';
 import { getCover } from '@/features/trips/covers';
 import { formatWeight } from '@/features/trips/format';
@@ -92,6 +97,7 @@ export function TripDetailPage() {
 
 function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: string }) {
   const { t, locale } = useI18n();
+  const navigate = useNavigate();
   const createCategory = useCreateCategory(tripId);
   const updateCategory = useUpdateCategory(tripId);
   const deleteCategory = useDeleteCategory(tripId);
@@ -104,9 +110,13 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
   const deleteBag = useDeleteBag(tripId);
   const assignBag = useAssignCategoryBag(tripId);
   const setArchived = useSetTripArchived(tripId);
+  const updateTrip = useUpdateTrip();
+  const deleteTrip = useDeleteTrip();
   const templates = useTemplates();
   const importTemplates = useImportTemplates(tripId);
 
+  const [editingTrip, setEditingTrip] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [addingCategory, setAddingCategory] = useState(false);
   const [addingItemCategoryId, setAddingItemCategoryId] = useState<string | null>(null);
   const [pendingItemId, setPendingItemId] = useState<string | null>(null);
@@ -126,6 +136,25 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
   const categories = trip.categories.map(toPackingCategory);
   const bags = trip.bags.map(toPackingBag);
   const archived = trip.isArchived;
+
+  /** Cover formulář neřeší – posíláme současný, ať ho úprava nesmaže. */
+  const handleUpdateTrip = (values: TripValues) => {
+    updateTrip.mutate(
+      {
+        tripId,
+        title: values.title,
+        destination: values.destination || null,
+        coverImage: trip.coverImage ?? null,
+        startDate: values.startDate || null,
+        endDate: values.endDate || null,
+      },
+      { onSuccess: () => setEditingTrip(false) },
+    );
+  };
+
+  const handleDeleteTrip = () => {
+    deleteTrip.mutate(tripId, { onSuccess: () => void navigate('/') });
+  };
 
   const handleAddCategory = (values: CategoryValues) => {
     createCategory.mutate(
@@ -241,20 +270,84 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
           {t('tripDetail.allTrips')}
         </Link>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setArchived.mutate(!archived)}
-          disabled={setArchived.isPending}
-        >
-          {archived ? (
-            <ArchiveRestore className="size-4" aria-hidden />
-          ) : (
-            <Archive className="size-4" aria-hidden />
-          )}
-          {archived ? t('tripDetail.restore') : t('tripDetail.archive')}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {!archived && !editingTrip ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                updateTrip.reset();
+                setConfirmingDelete(false);
+                setEditingTrip(true);
+              }}
+            >
+              <Pencil className="size-4" aria-hidden />
+              {t('tripDetail.edit')}
+            </Button>
+          ) : null}
+
+          {!confirmingDelete ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                deleteTrip.reset();
+                setEditingTrip(false);
+                setConfirmingDelete(true);
+              }}
+            >
+              <Trash2 className="size-4" aria-hidden />
+              {t('tripDetail.delete')}
+            </Button>
+          ) : null}
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setArchived.mutate(!archived)}
+            disabled={setArchived.isPending}
+          >
+            {archived ? (
+              <ArchiveRestore className="size-4" aria-hidden />
+            ) : (
+              <Archive className="size-4" aria-hidden />
+            )}
+            {archived ? t('tripDetail.restore') : t('tripDetail.archive')}
+          </Button>
+        </div>
       </div>
+
+      {confirmingDelete ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-danger bg-danger-bg px-4 py-3">
+          <p className="text-sm text-danger-fg">
+            {t('tripDetail.deleteConfirm.body', { title: trip.title })}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setConfirmingDelete(false)}
+              disabled={deleteTrip.isPending}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleDeleteTrip}
+              isLoading={deleteTrip.isPending}
+            >
+              {t('tripDetail.deleteConfirm.confirm')}
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      {deleteTrip.error ? (
+        <p role="alert" className="rounded-input bg-danger-bg px-3 py-2 text-sm text-danger-fg">
+          {errorText(deleteTrip.error, t)}
+        </p>
+      ) : null}
 
       {setArchived.error ? (
         <p role="alert" className="rounded-input bg-danger-bg px-3 py-2 text-sm text-danger-fg">
@@ -267,6 +360,23 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
           <Archive className="mt-0.5 size-4 shrink-0" aria-hidden />
           <p>{t('tripDetail.archivedNotice')}</p>
         </div>
+      ) : null}
+
+      {!archived && editingTrip ? (
+        <TripForm
+          mode="edit"
+          defaultValues={{
+            title: trip.title,
+            destination: trip.destination ?? '',
+            startDate: trip.startDate ?? '',
+            endDate: trip.endDate ?? '',
+          }}
+          onSubmit={handleUpdateTrip}
+          onCancel={() => setEditingTrip(false)}
+          pending={updateTrip.isPending}
+          error={errorText(updateTrip.error, t)}
+          fieldErrors={updateTrip.error instanceof ApiError ? updateTrip.error.fieldErrors : {}}
+        />
       ) : null}
 
       <Card className="overflow-hidden">

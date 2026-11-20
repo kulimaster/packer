@@ -81,6 +81,57 @@ export function useTrip(tripId: string) {
   });
 }
 
+export type UpdateTripInput = {
+  tripId: string;
+  title: string;
+  destination: string | null;
+  /** Cover se v UI needituje – posíláme současnou hodnotu, ať ji úprava nesmaže. */
+  coverImage: string | null;
+  startDate: string | null;
+  endDate: string | null;
+};
+
+export function useUpdateTrip() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ tripId, ...input }: UpdateTripInput): Promise<TripDto> => {
+      const { data, error, response } = await api.PUT('/api/trips/{tripId}', {
+        params: { path: { tripId } },
+        body: input,
+      });
+
+      if (!data) {
+        throw toApiError(error, response.status);
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['trips'] });
+    },
+  });
+}
+
+export function useDeleteTrip() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (tripId: string): Promise<void> => {
+      const { error, response } = await api.DELETE('/api/trips/{tripId}', {
+        params: { path: { tripId } },
+      });
+
+      if (error) {
+        throw toApiError(error, response.status);
+      }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['trips'] });
+    },
+  });
+}
+
 export type CreateCategoryInput = {
   name: string;
   icon: string;

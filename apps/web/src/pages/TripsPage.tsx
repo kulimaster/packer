@@ -7,10 +7,7 @@ import { Chip } from '@/components/ui/chip';
 import { useCurrentUser, useLogout } from '@/features/auth/api';
 import { AuthPanel } from '@/features/auth/components/auth-panel';
 import { toTripCard, useCreateTrip, useTrips } from '@/features/trips/api';
-import {
-  CreateTripForm,
-  type CreateTripValues,
-} from '@/features/trips/components/create-trip-form';
+import { TripForm, type TripValues } from '@/features/trips/components/trip-form';
 import { TripCard } from '@/features/trips/components/trip-card';
 import { ApiError } from '@/lib/api/client';
 import { errorText } from '@/lib/api/errors';
@@ -56,7 +53,7 @@ function TripsBoard({ displayName }: { displayName: string }) {
   const navigate = useNavigate();
   const [creating, setCreating] = useState(false);
 
-  const handleCreate = (values: CreateTripValues) => {
+  const handleCreate = (values: TripValues) => {
     createTrip.mutate(
       {
         title: values.title,
@@ -99,7 +96,7 @@ function TripsBoard({ displayName }: { displayName: string }) {
       </header>
 
       {creating ? (
-        <CreateTripForm
+        <TripForm
           onSubmit={handleCreate}
           onCancel={() => setCreating(false)}
           pending={createTrip.isPending}
