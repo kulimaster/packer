@@ -232,6 +232,8 @@ export const cs = {
   'tripDetail.deleteConfirm.body':
     'Smazat výlet „{title}“ i s celým balicím seznamem? Tohle nejde vzít zpět.',
   'tripDetail.deleteConfirm.confirm': 'Smazat navždy',
+  'tripDetail.duplicate': 'Duplikovat výlet',
+  'tripDetail.duplicate.title': '{title} (kopie)',
   'tripDetail.archive': 'Archivovat výlet',
   'tripDetail.restore': 'Obnovit výlet',
   'tripDetail.archivedNotice':

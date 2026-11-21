@@ -132,6 +132,34 @@ export function useDeleteTrip() {
   });
 }
 
+export type DuplicateTripInput = {
+  tripId: string;
+  /** Název skládá klient – text „(kopie)“ patří do i18n, ne do API. */
+  title: string;
+};
+
+export function useDuplicateTrip() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ tripId, title }: DuplicateTripInput): Promise<TripDto> => {
+      const { data, error, response } = await api.POST('/api/trips/{tripId}/duplicate', {
+        params: { path: { tripId } },
+        body: { title },
+      });
+
+      if (!data) {
+        throw toApiError(error, response.status);
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['trips'] });
+    },
+  });
+}
+
 export type CreateCategoryInput = {
   name: string;
   icon: string;

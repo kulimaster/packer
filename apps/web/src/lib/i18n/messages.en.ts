@@ -216,6 +216,8 @@ export const en: Messages = {
   'tripDetail.deleteConfirm.body':
     'Delete “{title}” and its whole packing list? This cannot be undone.',
   'tripDetail.deleteConfirm.confirm': 'Delete forever',
+  'tripDetail.duplicate': 'Duplicate trip',
+  'tripDetail.duplicate.title': '{title} (copy)',
   'tripDetail.archive': 'Archive trip',
   'tripDetail.restore': 'Restore trip',
   'tripDetail.archivedNotice': 'This trip is archived and read-only. Restore it to keep packing.',

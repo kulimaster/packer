@@ -10,6 +10,7 @@ using Packer.Application.Trips.DeleteBag;
 using Packer.Application.Trips.DeleteCategory;
 using Packer.Application.Trips.DeleteItem;
 using Packer.Application.Trips.DeleteTrip;
+using Packer.Application.Trips.DuplicateTrip;
 using Packer.Application.Templates.GetTemplate;
 using Packer.Application.Templates.GetTemplates;
 using Packer.Application.Trips.GetTrip;
@@ -41,6 +42,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<CreateTripHandler>();
         services.AddScoped<UpdateTripHandler>();
         services.AddScoped<DeleteTripHandler>();
+        services.AddScoped<DuplicateTripHandler>();
         services.AddScoped<CreateCategoryHandler>();
         services.AddScoped<UpdateCategoryHandler>();
         services.AddScoped<DeleteCategoryHandler>();
@@ -59,6 +61,7 @@ public static class ApplicationServiceCollectionExtensions
 
         services.AddScoped<IValidator<CreateTripRequest>, CreateTripRequestValidator>();
         services.AddScoped<IValidator<UpdateTripRequest>, UpdateTripRequestValidator>();
+        services.AddScoped<IValidator<DuplicateTripRequest>, DuplicateTripRequestValidator>();
         services.AddScoped<IValidator<CreateCategoryRequest>, CreateCategoryRequestValidator>();
         services.AddScoped<IValidator<UpdateCategoryRequest>, UpdateCategoryRequestValidator>();
         services.AddScoped<IValidator<CreateItemRequest>, CreateItemRequestValidator>();

@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Backpack,
   Calendar,
+  Copy,
   MapPin,
   Pencil,
   Plus,
@@ -34,6 +35,7 @@ import {
   useDeleteCategory,
   useDeleteItem,
   useDeleteTrip,
+  useDuplicateTrip,
   useSetItemPacked,
   useSetTripArchived,
   useTrip,
@@ -112,6 +114,7 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
   const setArchived = useSetTripArchived(tripId);
   const updateTrip = useUpdateTrip();
   const deleteTrip = useDeleteTrip();
+  const duplicateTrip = useDuplicateTrip();
   const templates = useTemplates();
   const importTemplates = useImportTemplates(tripId);
 
@@ -154,6 +157,13 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
 
   const handleDeleteTrip = () => {
     deleteTrip.mutate(tripId, { onSuccess: () => void navigate('/') });
+  };
+
+  const handleDuplicateTrip = () => {
+    duplicateTrip.mutate(
+      { tripId, title: t('tripDetail.duplicate.title', { title: trip.title }) },
+      { onSuccess: (copy) => void navigate(`/trips/${copy.id}`) },
+    );
   };
 
   const handleAddCategory = (values: CategoryValues) => {
@@ -314,6 +324,21 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
             )}
             {archived ? t('tripDetail.restore') : t('tripDetail.archive')}
           </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              duplicateTrip.reset();
+              setEditingTrip(false);
+              setConfirmingDelete(false);
+              handleDuplicateTrip();
+            }}
+            isLoading={duplicateTrip.isPending}
+          >
+            <Copy className="size-4" aria-hidden />
+            {t('tripDetail.duplicate')}
+          </Button>
         </div>
       </div>
 
@@ -352,6 +377,12 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
       {setArchived.error ? (
         <p role="alert" className="rounded-input bg-danger-bg px-3 py-2 text-sm text-danger-fg">
           {errorText(setArchived.error, t)}
+        </p>
+      ) : null}
+
+      {duplicateTrip.error ? (
+        <p role="alert" className="rounded-input bg-danger-bg px-3 py-2 text-sm text-danger-fg">
+          {errorText(duplicateTrip.error, t)}
         </p>
       ) : null}
 

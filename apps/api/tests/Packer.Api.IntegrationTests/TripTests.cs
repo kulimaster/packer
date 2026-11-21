@@ -304,6 +304,160 @@ public sealed class TripTests(PackerApiFactory factory) : ApiTestBase(factory)
     }
 
     [Fact]
+    public async Task Duplicate_copies_categories_items_and_bags()
+    {
+        using var client = CreateClient();
+        await RegisterAsync(client);
+
+        var trip = await CreateTripAsync(client);
+        var bag = await CreateBagAsync(client, trip.Id, "Peak Design 45L", "Checked", 23m);
+        var category = await CreateCategoryAsync(client, trip.Id);
+        var item = await CreateItemAsync(
+            client,
+            category.Id,
+            "Passport",
+            quantity: 2,
+            weightGrams: 30,
+            isEssential: true,
+            flags: ItemTraits.Fragile);
+
+        await PutAsync(client, $"/api/categories/{category.Id}/bag", new { bagId = bag.Id });
+        await PatchAsync(client, $"/api/items/{item.Id}/packed", new { isPacked = true });
+
+        var response = await PostAsync(
+            client,
+            $"/api/trips/{trip.Id}/duplicate",
+            new { title = "Asia Vacation (copy)" });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var copy = await ReadAsync<TripSummary>(response);
+
+        Assert.Equal($"/api/trips/{copy.Id}", response.Headers.Location?.OriginalString);
+        Assert.NotEqual(trip.Id, copy.Id);
+        Assert.Equal("Asia Vacation (copy)", copy.Title);
+        Assert.Equal(trip.Destination, copy.Destination);
+        Assert.False(copy.IsArchived);
+        Assert.Equal(0, copy.PackedCount);
+        Assert.Equal(1, copy.TotalCount);
+        Assert.Equal(TripStatus.NotStarted, copy.Status);
+
+        var detail = await GetTripAsync(client, copy.Id);
+
+        // Kopie má vlastní bag i kategorii – id se nesmí recyklovat.
+        var copyBag = Assert.Single(detail.Bags);
+
+        Assert.NotEqual(bag.Id, copyBag.Id);
+        Assert.Equal("Peak Design 45L", copyBag.Name);
+        Assert.Equal(BagKind.Checked, copyBag.Kind);
+        Assert.Equal(23m, copyBag.AllowanceKg);
+
+        var copyCategory = Assert.Single(detail.Categories);
+
+        Assert.NotEqual(category.Id, copyCategory.Id);
+        Assert.Equal(copyBag.Id, copyCategory.BagId);
+        Assert.Equal("Documents", copyCategory.Name);
+
+        var copyItem = Assert.Single(copyCategory.Items);
+
+        Assert.NotEqual(item.Id, copyItem.Id);
+        Assert.Equal("Passport", copyItem.Title);
+        Assert.Equal(2, copyItem.Quantity);
+        Assert.Equal(30, copyItem.WeightGrams);
+        Assert.True(copyItem.IsEssential);
+        Assert.Equal(ItemTraits.Fragile, copyItem.Flags);
+
+        // Nová cesta začíná nesbalená, i když byla předloha sbalená.
+        Assert.False(copyItem.IsPacked);
+        Assert.Null(copyItem.PackedAt);
+
+        // Předloha zůstala nedotčená.
+        var source = await GetTripAsync(client, trip.Id);
+
+        Assert.True(Assert.Single(Assert.Single(source.Categories).Items).IsPacked);
+        Assert.Equal(1, source.PackedCount);
+    }
+
+    [Fact]
+    public async Task Duplicate_without_title_reuses_source_title()
+    {
+        using var client = CreateClient();
+        await RegisterAsync(client);
+        var trip = await CreateTripAsync(client);
+
+        var response = await PostAsync(client, $"/api/trips/{trip.Id}/duplicate", new { title = (string?)null });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal("Asia Vacation", (await ReadAsync<TripSummary>(response)).Title);
+    }
+
+    [Fact]
+    public async Task Duplicate_of_archived_trip_creates_active_copy()
+    {
+        using var client = CreateClient();
+        await RegisterAsync(client);
+        var trip = await CreateTripAsync(client);
+        var category = await CreateCategoryAsync(client, trip.Id);
+        await CreateItemAsync(client, category.Id);
+
+        await ArchiveAsync(client, trip.Id);
+
+        var response = await PostAsync(
+            client,
+            $"/api/trips/{trip.Id}/duplicate",
+            new { title = "Asia Vacation 2027" });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var copy = await ReadAsync<TripSummary>(response);
+
+        Assert.False(copy.IsArchived);
+        Assert.Equal(1, copy.TotalCount);
+
+        // Archivovaná předloha zůstává archivovaná.
+        Assert.True((await GetTripAsync(client, trip.Id)).IsArchived);
+    }
+
+    [Fact]
+    public async Task Duplicate_rejects_too_long_title()
+    {
+        using var client = CreateClient();
+        await RegisterAsync(client);
+        var trip = await CreateTripAsync(client);
+
+        var response = await PostAsync(
+            client,
+            $"/api/trips/{trip.Id}/duplicate",
+            new { title = new string('a', Trip.TitleMaxLength + 1) });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var error = await ReadAsync<ErrorBody>(response);
+
+        Assert.Equal("validation_failed", error.Code);
+        Assert.Contains("title", error.Errors!.Keys);
+    }
+
+    [Fact]
+    public async Task Foreign_trip_cannot_be_duplicated()
+    {
+        using var owner = CreateClient();
+        await RegisterAsync(owner);
+        var trip = await CreateTripAsync(owner);
+
+        using var stranger = CreateClient();
+        await RegisterAsync(stranger);
+
+        var response = await PostAsync(
+            stranger,
+            $"/api/trips/{trip.Id}/duplicate",
+            new { title = "Sneaky copy" });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("trip_not_found", (await ReadAsync<ErrorBody>(response)).Code);
+    }
+
+    [Fact]
     public async Task Unknown_trip_returns_not_found()
     {
         using var client = CreateClient();
