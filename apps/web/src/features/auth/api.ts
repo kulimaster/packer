@@ -84,6 +84,44 @@ export function useRegister() {
   });
 }
 
+export function useUpdateProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (displayName: string): Promise<CurrentUser> => {
+      const { data, error, response } = await api.PUT('/api/auth/profile', {
+        body: { displayName },
+      });
+
+      if (!data) {
+        throw toApiError(error, response.status);
+      }
+
+      return data;
+    },
+    onSuccess: (user) => {
+      queryClient.setQueryData(authKeys.me, user);
+    },
+  });
+}
+
+export type ChangePasswordInput = {
+  currentPassword: string;
+  newPassword: string;
+};
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: async (input: ChangePasswordInput): Promise<void> => {
+      const { error, response } = await api.PUT('/api/auth/password', { body: input });
+
+      if (error) {
+        throw toApiError(error, response.status);
+      }
+    },
+  });
+}
+
 export function useLogout() {
   const queryClient = useQueryClient();
 

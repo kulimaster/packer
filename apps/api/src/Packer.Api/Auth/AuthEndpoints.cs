@@ -44,6 +44,20 @@ internal static class AuthEndpoints
             .Produces<ApiError>(StatusCodes.Status401Unauthorized)
             .RequireAuthorization();
 
+        group.MapPut("/profile", UpdateProfileAsync)
+            .Produces<UserResponse>(StatusCodes.Status200OK)
+            .Produces<ApiError>(StatusCodes.Status400BadRequest)
+            .Produces<ApiError>(StatusCodes.Status401Unauthorized)
+            .RequireAuthorization()
+            .AddEndpointFilter<AntiforgeryFilter>();
+
+        group.MapPut("/password", ChangePasswordAsync)
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces<ApiError>(StatusCodes.Status400BadRequest)
+            .Produces<ApiError>(StatusCodes.Status401Unauthorized)
+            .RequireAuthorization()
+            .AddEndpointFilter<AntiforgeryFilter>();
+
         return app;
     }
 
@@ -153,6 +167,88 @@ internal static class AuthEndpoints
         return Results.Ok(new UserResponse(user.Id, user.Email ?? string.Empty, user.DisplayName));
     }
 
+    private static async Task<IResult> UpdateProfileAsync(
+        UpdateProfileRequest request,
+        ClaimsPrincipal principal,
+        UserManager<ApplicationUser> users)
+    {
+        var user = await users.GetUserAsync(principal)
+            ?? throw new UnauthenticatedException();
+
+        var displayName = request.DisplayName?.Trim();
+
+        if (string.IsNullOrEmpty(displayName))
+        {
+            throw new ValidationFailedException(ToValidationErrors(new Dictionary<string, List<string>>
+            {
+                ["displayName"] = ["Display name is required."],
+            }));
+        }
+
+        if (displayName.Length > ApplicationUser.DisplayNameMaxLength)
+        {
+            throw new ValidationFailedException(ToValidationErrors(new Dictionary<string, List<string>>
+            {
+                ["displayName"] =
+                    [$"Display name must be at most {ApplicationUser.DisplayNameMaxLength} characters."],
+            }));
+        }
+
+        user.DisplayName = displayName;
+
+        var result = await users.UpdateAsync(user);
+
+        if (!result.Succeeded)
+        {
+            throw new ValidationFailedException(IdentityErrors(result));
+        }
+
+        return Results.Ok(new UserResponse(user.Id, user.Email ?? string.Empty, user.DisplayName));
+    }
+
+    private static async Task<IResult> ChangePasswordAsync(
+        ChangePasswordRequest request,
+        ClaimsPrincipal principal,
+        UserManager<ApplicationUser> users,
+        SignInManager<ApplicationUser> signIn)
+    {
+        var user = await users.GetUserAsync(principal)
+            ?? throw new UnauthenticatedException();
+
+        var errors = new Dictionary<string, List<string>>();
+
+        if (string.IsNullOrEmpty(request.CurrentPassword))
+        {
+            errors["currentPassword"] = ["Current password is required."];
+        }
+
+        if (string.IsNullOrEmpty(request.NewPassword))
+        {
+            errors["newPassword"] = ["New password is required."];
+        }
+
+        if (errors.Count > 0)
+        {
+            throw new ValidationFailedException(ToValidationErrors(errors));
+        }
+
+        var result = await users.ChangePasswordAsync(
+            user,
+            request.CurrentPassword!,
+            request.NewPassword!);
+
+        if (!result.Succeeded)
+        {
+            throw new ValidationFailedException(PasswordErrors(result));
+        }
+
+        // Nový security stamp odhlásí ostatní relace; tuhle jednu podržíme přihlášenou.
+        await users.UpdateSecurityStampAsync(user);
+        await signIn.RefreshSignInAsync(user);
+
+        return Results.NoContent();
+    }
+
     private static Dictionary<string, string[]> ToValidationErrors(
         Dictionary<string, List<string>> errors) =>
         errors.ToDictionary(pair => pair.Key, pair => pair.Value.ToArray());
@@ -161,6 +257,30 @@ internal static class AuthEndpoints
     /// Identity chyby mají kódy (<c>PasswordTooShort</c>, <c>DuplicateEmail</c>…).
     /// Překládáme je na pole formuláře, aby je frontend uměl zobrazit u konkrétního inputu.
     /// </summary>
+    /// <summary>
+    /// U změny hesla zajímá klienta hlavně to, jestli se trefil do současného hesla;
+    /// zbytek (délka, složitost) patří k novému heslu.
+    /// </summary>
+    private static Dictionary<string, string[]> PasswordErrors(IdentityResult result)
+    {
+        var errors = new Dictionary<string, List<string>>();
+
+        foreach (var error in result.Errors)
+        {
+            var field = error.Code == "PasswordMismatch" ? "currentPassword" : "newPassword";
+
+            if (!errors.TryGetValue(field, out var messages))
+            {
+                messages = [];
+                errors[field] = messages;
+            }
+
+            messages.Add(error.Description);
+        }
+
+        return ToValidationErrors(errors);
+    }
+
     private static Dictionary<string, string[]> IdentityErrors(IdentityResult result)
     {
         var errors = new Dictionary<string, List<string>>();

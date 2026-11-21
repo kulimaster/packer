@@ -187,6 +187,95 @@ public sealed class AuthTests(PackerApiFactory factory) : ApiTestBase(factory)
             (await client.GetAsync("/api/auth/me")).StatusCode);
     }
 
+    [Fact]
+    public async Task Update_profile_changes_display_name()
+    {
+        using var client = CreateClient();
+        await RegisterAsync(client, "Martin");
+
+        var response = await PutAsync(client, "/api/auth/profile", new { displayName = "Martin K." });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var updated = await ReadAsync<UserBody>(response);
+
+        Assert.Equal("Martin K.", updated.DisplayName);
+        Assert.Equal("Martin K.", (await ReadAsync<UserBody>(await client.GetAsync("/api/auth/me"))).DisplayName);
+    }
+
+    [Fact]
+    public async Task Update_profile_rejects_blank_display_name()
+    {
+        using var client = CreateClient();
+        await RegisterAsync(client, "Martin");
+
+        var response = await PutAsync(client, "/api/auth/profile", new { displayName = "   " });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var error = await ReadAsync<ErrorBody>(response);
+
+        Assert.Equal("validation_failed", error.Code);
+        Assert.Contains("displayName", error.Errors!.Keys);
+        Assert.Equal("Martin", (await ReadAsync<UserBody>(await client.GetAsync("/api/auth/me"))).DisplayName);
+    }
+
+    [Fact]
+    public async Task Change_password_rejects_wrong_current_password()
+    {
+        using var client = CreateClient();
+        await RegisterAsync(client);
+
+        var response = await PutAsync(client, "/api/auth/password", new
+        {
+            currentPassword = "not the current password",
+            newPassword = "a brand new passphrase",
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var error = await ReadAsync<ErrorBody>(response);
+
+        Assert.Equal("validation_failed", error.Code);
+        Assert.Contains("currentPassword", error.Errors!.Keys);
+    }
+
+    [Fact]
+    public async Task Change_password_switches_the_credentials()
+    {
+        using var client = CreateClient();
+        var user = await RegisterAsync(client);
+
+        var response = await PutAsync(client, "/api/auth/password", new
+        {
+            currentPassword = user.Password,
+            newPassword = "a brand new passphrase",
+        });
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        // Aktuální session zůstává přihlášená.
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me")).StatusCode);
+
+        using var fresh = CreateClient();
+
+        var oldLogin = await PostAsync(fresh, "/api/auth/login", new
+        {
+            email = user.Email,
+            password = user.Password,
+        });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, oldLogin.StatusCode);
+
+        var newLogin = await PostAsync(fresh, "/api/auth/login", new
+        {
+            email = user.Email,
+            password = "a brand new passphrase",
+        });
+
+        Assert.Equal(HttpStatusCode.OK, newLogin.StatusCode);
+    }
+
     /// <summary>
     /// Antiforgery token je vázaný na uživatele. Po odhlášení se stejným tokenem
     /// nesmí projít ani login – jinak by se dal token recyklovat napříč session.
