@@ -16,7 +16,23 @@ public sealed record TemplateSummary(
     bool IsSystem,
     int ItemCount,
     int EstimatedWeightGrams,
-    IReadOnlyList<string> Categories);
+    IReadOnlyList<string> Categories)
+{
+    public static TemplateSummary From(Template template, IReadOnlyList<TemplateItem> items) =>
+        new(
+            template.Id,
+            template.Name,
+            template.Description,
+            template.Icon,
+            template.Accent,
+            template.OwnerId is null,
+            items.Count,
+            items.Sum(item => (item.WeightGrams ?? 0) * item.Quantity),
+            items
+                .Select(item => item.CategoryName)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList());
+}
 
 public sealed class GetTemplatesHandler(IAppDbContext db, ICurrentUser currentUser)
 {
@@ -42,24 +58,9 @@ public sealed class GetTemplatesHandler(IAppDbContext db, ICurrentUser currentUs
             .ToDictionary(group => group.Key, group => group.ToList());
 
         return templates
-            .Select(template =>
-            {
-                var templateItems = itemsByTemplate.GetValueOrDefault(template.Id) ?? [];
-
-                return new TemplateSummary(
-                    template.Id,
-                    template.Name,
-                    template.Description,
-                    template.Icon,
-                    template.Accent,
-                    template.OwnerId is null,
-                    templateItems.Count,
-                    templateItems.Sum(item => (item.WeightGrams ?? 0) * item.Quantity),
-                    templateItems
-                        .Select(item => item.CategoryName)
-                        .Distinct(StringComparer.OrdinalIgnoreCase)
-                        .ToList());
-            })
+            .Select(template => TemplateSummary.From(
+                template,
+                itemsByTemplate.GetValueOrDefault(template.Id) ?? []))
             .ToList();
     }
 }

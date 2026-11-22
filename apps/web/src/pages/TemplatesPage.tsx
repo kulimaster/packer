@@ -1,13 +1,46 @@
-import { Sparkles } from 'lucide-react';
+import { Pencil, Sparkles, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { toTemplateCard, useTemplates } from '@/features/templates/api';
+import {
+  toTemplateCard,
+  useDeleteTemplate,
+  useTemplates,
+  useUpdateTemplate,
+  type TemplateSummaryDto,
+} from '@/features/templates/api';
 import { TemplateCard } from '@/features/templates/components/template-card';
+import { TemplateForm, type TemplateValues } from '@/features/templates/components/template-form';
+import { ApiError } from '@/lib/api/client';
 import { errorText } from '@/lib/api/errors';
 import { useI18n } from '@/lib/i18n';
 
 export function TemplatesPage() {
   const { t } = useI18n();
   const templates = useTemplates();
+  const updateTemplate = useUpdateTemplate();
+  const deleteTemplate = useDeleteTemplate();
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleUpdate = (template: TemplateSummaryDto, values: TemplateValues) => {
+    updateTemplate.mutate(
+      {
+        templateId: template.id,
+        name: values.name,
+        description: values.description,
+        icon: template.icon,
+        accent: template.accent,
+      },
+      { onSuccess: () => setEditingId(null) },
+    );
+  };
+
+  const handleDelete = (templateId: string) => {
+    setDeletingId(templateId);
+    deleteTemplate.mutate(templateId, { onSettled: () => setDeletingId(null) });
+  };
 
   return (
     <div className="space-y-6">
@@ -41,10 +74,67 @@ export function TemplatesPage() {
             {t('templates.hint')} {t('templates.hintDetail')}
           </p>
 
+          {updateTemplate.error || deleteTemplate.error ? (
+            <p role="alert" className="rounded-input bg-danger-bg px-3 py-2 text-sm text-danger-fg">
+              {errorText(updateTemplate.error ?? deleteTemplate.error, t)}
+            </p>
+          ) : null}
+
           <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {templates.data.map((template) => (
-              <li key={template.id}>
-                <TemplateCard template={toTemplateCard(template)} className="h-full" />
+              <li key={template.id} className="flex flex-col gap-2">
+                {editingId === template.id ? (
+                  <Card className="p-3">
+                    <TemplateForm
+                      mode="edit"
+                      defaultValues={{
+                        name: template.name,
+                        description: template.description ?? '',
+                      }}
+                      onSubmit={(values) => handleUpdate(template, values)}
+                      onCancel={() => setEditingId(null)}
+                      pending={
+                        updateTemplate.isPending &&
+                        updateTemplate.variables?.templateId === template.id
+                      }
+                      fieldErrors={
+                        updateTemplate.error instanceof ApiError &&
+                        updateTemplate.variables?.templateId === template.id
+                          ? updateTemplate.error.fieldErrors
+                          : {}
+                      }
+                    />
+                  </Card>
+                ) : (
+                  <>
+                    <TemplateCard template={toTemplateCard(template)} className="flex-1" />
+
+                    {template.isSystem ? null : (
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            updateTemplate.reset();
+                            setEditingId(template.id);
+                          }}
+                        >
+                          <Pencil className="size-4" aria-hidden />
+                          {t('templates.edit')}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(template.id)}
+                          isLoading={deleteTemplate.isPending && deletingId === template.id}
+                        >
+                          <Trash2 className="size-4" aria-hidden />
+                          {t('templates.delete')}
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                )}
               </li>
             ))}
           </ul>

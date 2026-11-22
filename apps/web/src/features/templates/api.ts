@@ -48,6 +48,103 @@ export function useImportTemplates(tripId: string) {
   });
 }
 
+export type CreateTemplateInput = {
+  tripId: string;
+  name: string;
+  description?: string;
+  icon: string;
+  accent: string;
+};
+
+export function useCreateTemplate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      tripId,
+      name,
+      description,
+      icon,
+      accent,
+    }: CreateTemplateInput): Promise<TemplateSummaryDto> => {
+      const { data, error, response } = await api.POST('/api/templates', {
+        body: {
+          tripId,
+          name,
+          description: description || null,
+          icon,
+          accent,
+        },
+      });
+
+      if (!data) {
+        throw toApiError(error, response.status);
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: templateKeys.list });
+    },
+  });
+}
+
+export type UpdateTemplateInput = {
+  templateId: string;
+  name: string;
+  description?: string;
+  /** Ikona a barva se v UI needitují – posíláme současné hodnoty, ať je úprava nesmaže. */
+  icon: string;
+  accent: string;
+};
+
+export function useUpdateTemplate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      templateId,
+      name,
+      description,
+      icon,
+      accent,
+    }: UpdateTemplateInput): Promise<TemplateSummaryDto> => {
+      const { data, error, response } = await api.PUT('/api/templates/{templateId}', {
+        params: { path: { templateId } },
+        body: { name, description: description || null, icon, accent },
+      });
+
+      if (!data) {
+        throw toApiError(error, response.status);
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: templateKeys.list });
+    },
+  });
+}
+
+export function useDeleteTemplate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (templateId: string): Promise<void> => {
+      const { error, response } = await api.DELETE('/api/templates/{templateId}', {
+        params: { path: { templateId } },
+      });
+
+      if (error) {
+        throw toApiError(error, response.status);
+      }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: templateKeys.list });
+    },
+  });
+}
+
 export function toTemplateCard(template: TemplateSummaryDto): TemplateCardData {
   return {
     id: template.id,

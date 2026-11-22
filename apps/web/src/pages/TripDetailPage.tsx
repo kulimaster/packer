@@ -3,6 +3,7 @@ import {
   ArchiveRestore,
   ArrowLeft,
   Backpack,
+  BookmarkPlus,
   Calendar,
   Copy,
   MapPin,
@@ -20,7 +21,13 @@ import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { ApiError } from '@/lib/api/client';
 import { errorText } from '@/lib/api/errors';
-import { toTemplateCard, useImportTemplates, useTemplates } from '@/features/templates/api';
+import {
+  toTemplateCard,
+  useCreateTemplate,
+  useImportTemplates,
+  useTemplates,
+} from '@/features/templates/api';
+import { TemplateForm, type TemplateValues } from '@/features/templates/components/template-form';
 import { TemplateImportPanel } from '@/features/templates/components/template-import-panel';
 import {
   formatDateRange,
@@ -117,9 +124,12 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
   const duplicateTrip = useDuplicateTrip();
   const templates = useTemplates();
   const importTemplates = useImportTemplates(tripId);
+  const createTemplate = useCreateTemplate();
 
   const [editingTrip, setEditingTrip] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const [templateSavedName, setTemplateSavedName] = useState<string | null>(null);
   const [addingCategory, setAddingCategory] = useState(false);
   const [addingItemCategoryId, setAddingItemCategoryId] = useState<string | null>(null);
   const [pendingItemId, setPendingItemId] = useState<string | null>(null);
@@ -163,6 +173,25 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
     duplicateTrip.mutate(
       { tripId, title: t('tripDetail.duplicate.title', { title: trip.title }) },
       { onSuccess: (copy) => void navigate(`/trips/${copy.id}`) },
+    );
+  };
+
+  /** Nová šablona je dědicem výletu – položky kopíruje API, tady jde jen název a popis. */
+  const handleSaveAsTemplate = (values: TemplateValues) => {
+    createTemplate.mutate(
+      {
+        tripId,
+        name: values.name,
+        description: values.description,
+        icon: 'backpack',
+        accent: 'mint',
+      },
+      {
+        onSuccess: () => {
+          setSavingTemplate(false);
+          setTemplateSavedName(values.name);
+        },
+      },
     );
   };
 
@@ -484,13 +513,52 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
               {t('tripDetail.packingList')}
             </h2>
 
-            {!archived && !importingTemplates ? (
-              <Button variant="secondary" size="sm" onClick={openTemplatePicker}>
-                <Sparkles className="size-4" aria-hidden />
-                {t('tripDetail.addTemplates')}
-              </Button>
-            ) : null}
+            <div className="flex flex-wrap items-center gap-1">
+              {total > 0 ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    createTemplate.reset();
+                    setTemplateSavedName(null);
+                    setSavingTemplate(true);
+                  }}
+                >
+                  <BookmarkPlus className="size-4" aria-hidden />
+                  {t('tripDetail.saveAsTemplate')}
+                </Button>
+              ) : null}
+
+              {!archived && !importingTemplates ? (
+                <Button variant="secondary" size="sm" onClick={openTemplatePicker}>
+                  <Sparkles className="size-4" aria-hidden />
+                  {t('tripDetail.addTemplates')}
+                </Button>
+              ) : null}
+            </div>
           </div>
+
+          {templateSavedName ? (
+            <p role="status" className="rounded-input bg-tertiary px-3 py-2 text-sm text-primary">
+              {t('tripDetail.templateSaved', { name: templateSavedName })}{' '}
+              <Link to="/templates" className="font-semibold underline">
+                {t('tripDetail.openTemplates')}
+              </Link>
+            </p>
+          ) : null}
+
+          {savingTemplate ? (
+            <TemplateForm
+              defaultValues={{ name: trip.title }}
+              onSubmit={handleSaveAsTemplate}
+              onCancel={() => setSavingTemplate(false)}
+              pending={createTemplate.isPending}
+              error={errorText(createTemplate.error, t)}
+              fieldErrors={
+                createTemplate.error instanceof ApiError ? createTemplate.error.fieldErrors : {}
+              }
+            />
+          ) : null}
 
           {!archived && importingTemplates ? (
             <TemplateImportPanel
