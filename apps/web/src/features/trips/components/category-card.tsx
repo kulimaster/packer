@@ -10,6 +10,7 @@ import { categoryIcons, type CategoryIconKey } from '../icons';
 import type { PackingBag } from './bag-card';
 import { CategoryForm, type CategoryValues } from './category-form';
 import { ItemForm, type ItemValues } from './item-form';
+import { parseItemFlags } from '../item-traits';
 import { ItemRow, type PackingItem } from './item-row';
 
 export type PackingCategory = {
@@ -300,5 +301,7 @@ function toItemValues(item: PackingItem): Partial<ItemValues> {
     quantity: item.quantity,
     weightGrams: item.weightGrams === undefined ? '' : String(item.weightGrams),
     isEssential: item.isEssential,
+    note: item.note ?? '',
+    flags: parseItemFlags(item.flags),
   };
 }

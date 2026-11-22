@@ -58,6 +58,7 @@ import type { BagValues } from '@/features/trips/components/bag-form';
 import { BagsPanel } from '@/features/trips/components/bags-panel';
 import { CategoryCard } from '@/features/trips/components/category-card';
 import type { ItemValues } from '@/features/trips/components/item-form';
+import { formatItemFlags } from '@/features/trips/item-traits';
 import { TripForm, type TripValues } from '@/features/trips/components/trip-form';
 import { tripStatusMessageKey, tripStatusTone } from '@/features/trips/trip-status';
 import { getCover } from '@/features/trips/covers';
@@ -220,30 +221,24 @@ function TripDetailContent({ trip, tripId }: { trip: TripDetailsDto; tripId: str
       {
         categoryId,
         title: values.title,
+        note: values.note || null,
         quantity: values.quantity,
         isEssential: values.isEssential,
+        flags: formatItemFlags(values.flags),
         weightGrams: values.weightGrams === '' ? null : Number(values.weightGrams),
       },
       { onSuccess: () => setAddingItemCategoryId(null) },
     );
   };
 
-  /**
-   * Poznámku a vlastnosti (flags) formulář neumí – posíláme je beze změny,
-   * ať je úprava názvu nebo počtu nesmaže.
-   */
   const handleUpdateItem = (itemId: string, values: ItemValues) => {
-    const item = categories
-      .flatMap((category) => category.items)
-      .find((entry) => entry.id === itemId);
-
     return updateItem.mutateAsync({
       itemId,
       title: values.title,
-      note: item?.note ?? null,
+      note: values.note || null,
       quantity: values.quantity,
       isEssential: values.isEssential,
-      flags: item?.flags ?? 'None',
+      flags: formatItemFlags(values.flags),
       weightGrams: values.weightGrams === '' ? null : Number(values.weightGrams),
     });
   };

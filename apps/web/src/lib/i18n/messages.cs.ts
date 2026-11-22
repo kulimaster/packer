@@ -117,6 +117,9 @@ export const cs = {
   'itemForm.placeholder.weight': 'Nepovinné',
   'itemForm.hint.weight': 'Hmotnost jednoho kusu.',
   'itemForm.essential': 'Nezbytné',
+  'itemForm.field.note': 'Poznámka',
+  'itemForm.placeholder.note': 'Např. nabít před odletem',
+  'itemForm.field.flags': 'Vlastnosti',
   'itemForm.submit.create': 'Přidat položku',
   'itemForm.submitPending.create': 'Přidávám…',
   'itemForm.submit.edit': 'Uložit položku',
@@ -126,6 +129,7 @@ export const cs = {
   'itemForm.validation.quantityMin': 'Alespoň 1.',
   'itemForm.validation.quantityMax': 'Nejvýš 999.',
   'itemForm.validation.weight': 'Zadej celé číslo gramů (0–100 000).',
+  'itemForm.validation.noteMax': 'Poznámka může mít nejvýš 300 znaků.',
 
   // formulář kategorie
   'categoryForm.title': 'Nová kategorie',

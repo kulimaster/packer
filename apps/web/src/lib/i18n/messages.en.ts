@@ -108,6 +108,9 @@ export const en: Messages = {
   'itemForm.placeholder.weight': 'Optional',
   'itemForm.hint.weight': 'Weight of one piece.',
   'itemForm.essential': 'Essential',
+  'itemForm.field.note': 'Note',
+  'itemForm.placeholder.note': 'E.g. charge before the flight',
+  'itemForm.field.flags': 'Traits',
   'itemForm.submit.create': 'Add item',
   'itemForm.submitPending.create': 'Adding…',
   'itemForm.submit.edit': 'Save item',
@@ -117,6 +120,7 @@ export const en: Messages = {
   'itemForm.validation.quantityMin': 'At least 1.',
   'itemForm.validation.quantityMax': 'At most 999.',
   'itemForm.validation.weight': 'Use a whole number of grams (0–100000).',
+  'itemForm.validation.noteMax': 'Note can have 300 characters at most.',
 
   'categoryForm.title': 'New category',
   'categoryForm.subtitle': 'A section to pack into – such as "Carry-on" or "Electronics".',

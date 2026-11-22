@@ -246,8 +246,11 @@ export function useDeleteCategory(tripId: string) {
 export type CreateItemInput = {
   categoryId: string;
   title: string;
+  note: string | null;
   quantity: number;
   isEssential: boolean;
+  /** Bitová maska z API jako string (`None`, `Fragile, Battery`). */
+  flags: string;
   weightGrams: number | null;
 };
 
@@ -260,10 +263,10 @@ export function useCreateItem(tripId: string) {
         params: { path: { categoryId: input.categoryId } },
         body: {
           title: input.title,
-          note: null,
+          note: input.note,
           quantity: input.quantity,
           isEssential: input.isEssential,
-          flags: 'None',
+          flags: input.flags,
           weightGrams: input.weightGrams,
         },
       });

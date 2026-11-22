@@ -27,7 +27,43 @@ export const Default: Story = {};
 export const Edit: Story = {
   args: {
     mode: 'edit',
-    defaultValues: { title: 'Passport', quantity: 2, weightGrams: '30', isEssential: true },
+    defaultValues: {
+      title: 'Passport',
+      quantity: 2,
+      weightGrams: '30',
+      isEssential: true,
+      note: 'Druhý pas kvůli vízům',
+      flags: { carryOnOnly: true, fragile: false, tsaLiquid: false, battery: false },
+    },
+  },
+};
+
+/** Všechny vlastnosti zaškrtnuté – ověří, že se řada checkboxů vejde i na malý displej. */
+export const AllTraits: Story = {
+  args: {
+    mode: 'edit',
+    defaultValues: {
+      title: 'Power bank',
+      quantity: 1,
+      weightGrams: '240',
+      note: 'Nabít před odletem',
+      flags: { carryOnOnly: true, fragile: false, tsaLiquid: true, battery: true },
+    },
+  },
+};
+
+/** Dlouhá poznámka na limitu 300 znaků – pole se nesmí rozbít. */
+export const LongNote: Story = {
+  args: {
+    mode: 'edit',
+    defaultValues: {
+      title: 'Camera lens',
+      note:
+        'Vždycky ji beru v příručním zavazadle, protože do odbaveného bych ji nedal. ' +
+        'Ještě před odletem zkontrolovat, že krytky drží a že je ve futrálu i látka na čištění.',
+      weightGrams: '640',
+      flags: { carryOnOnly: true, fragile: true, tsaLiquid: false, battery: false },
+    },
   },
 };
 
