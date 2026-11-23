@@ -15,6 +15,7 @@ export const en: Messages = {
 
   'nav.trips': 'Trips',
   'nav.templates': 'Templates',
+  'nav.archive': 'Archive',
   'nav.settings': 'Settings',
   'app.version': 'v0.1 · in development',
   'app.switchLanguage': 'Switch to Czech',
@@ -59,6 +60,14 @@ export const en: Messages = {
   'trips.empty.bodyAll': 'Archived trips show up here once you archive one.',
   'trips.empty.action': 'Plan your first trip',
 
+  'archive.title': 'Archive',
+  'archive.subtitle':
+    'Trips that are no longer active. The data stays, it just gets out of the way.',
+  'archive.empty.title': 'The archive is empty',
+  'archive.empty.body': 'Archived trips move here and stay read-only.',
+  'archive.empty.action': 'Back to trips',
+  'archive.error.title': 'Archive could not be loaded',
+
   'tripForm.title': 'New trip',
   'tripForm.subtitle': 'Just the basics for now – add categories and items in the trip detail.',
   'tripForm.field.title': 'Title',
@@ -83,6 +92,8 @@ export const en: Messages = {
   'tripCard.packed': '{packed} / {total} packed',
   'tripCard.continue': 'Continue packing',
   'tripCard.review': 'Review packing',
+  'tripCard.restore': 'Restore trip',
+  'tripCard.restoring': 'Restoring…',
 
   'category.bagSelect': 'Bag for {name}',
   'category.noBag': 'No bag',

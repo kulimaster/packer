@@ -1,4 +1,4 @@
-import { LayoutGrid, Plane, SlidersHorizontal, type LucideIcon } from 'lucide-react';
+import { Archive, LayoutGrid, Plane, SlidersHorizontal, type LucideIcon } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/cn';
 import { useI18n, type MessageKey } from '@/lib/i18n';
@@ -14,6 +14,7 @@ type NavigationItem = {
 const navigation: NavigationItem[] = [
   { to: '/', messageKey: 'nav.trips', icon: Plane, end: true },
   { to: '/templates', messageKey: 'nav.templates', icon: LayoutGrid, end: false },
+  { to: '/archive', messageKey: 'nav.archive', icon: Archive, end: false },
   { to: '/settings', messageKey: 'nav.settings', icon: SlidersHorizontal, end: false },
 ];
 

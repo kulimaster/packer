@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { AppShell } from './AppShell';
+import { ArchivePage } from '@/pages/ArchivePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { TemplatesPage } from '@/pages/TemplatesPage';
@@ -14,6 +15,7 @@ export const router = createBrowserRouter([
       { index: true, element: <TripsPage /> },
       { path: 'trips/:tripId', element: <TripDetailPage /> },
       { path: 'templates', element: <TemplatesPage /> },
+      { path: 'archive', element: <ArchivePage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],

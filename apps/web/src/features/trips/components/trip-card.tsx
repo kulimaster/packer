@@ -1,4 +1,4 @@
-import { Calendar, MapPin } from 'lucide-react';
+import { ArchiveRestore, Calendar, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -31,10 +31,20 @@ type TripCardProps = {
    * protože soutěží s hlavním CTA obrazovky.
    */
   ctaVariant?: 'soft' | 'primary';
+  /** Archivovaný výlet jde obnovit přímo z karty v archivu. */
+  onRestore?: () => void;
+  restorePending?: boolean;
   className?: string;
 };
 
-export function TripCard({ trip, onContinue, ctaVariant = 'primary', className }: TripCardProps) {
+export function TripCard({
+  trip,
+  onContinue,
+  ctaVariant = 'primary',
+  onRestore,
+  restorePending = false,
+  className,
+}: TripCardProps) {
   const { t } = useI18n();
   // Vlastní fotka vyhrává; jinak výchozí cover; jinak gradient.
   const imageUrl = trip.imageUrl ?? getCover(trip.coverId)?.file;
@@ -88,9 +98,18 @@ export function TripCard({ trip, onContinue, ctaVariant = 'primary', className }
           showValue
         />
 
-        <Button variant={ctaVariant} fullWidth onClick={onContinue}>
-          {trip.status === 'archived' ? t('tripCard.review') : t('tripCard.continue')}
-        </Button>
+        <div className="space-y-2">
+          <Button variant={ctaVariant} fullWidth onClick={onContinue}>
+            {trip.status === 'archived' ? t('tripCard.review') : t('tripCard.continue')}
+          </Button>
+
+          {onRestore ? (
+            <Button variant="ghost" fullWidth onClick={onRestore} disabled={restorePending}>
+              <ArchiveRestore className="size-4" aria-hidden />
+              {restorePending ? t('tripCard.restoring') : t('tripCard.restore')}
+            </Button>
+          ) : null}
+        </div>
       </div>
     </Card>
   );

@@ -18,6 +18,7 @@ export const cs = {
   // navigace a aplikace
   'nav.trips': 'Výlety',
   'nav.templates': 'Šablony',
+  'nav.archive': 'Archiv',
   'nav.settings': 'Nastavení',
   'app.version': 'v0.1 · vývoj',
   'app.switchLanguage': 'Přepnout do angličtiny',
@@ -64,6 +65,15 @@ export const cs = {
   'trips.empty.bodyAll': 'Archivované výlety se tu objeví, jakmile nějaký archivuješ.',
   'trips.empty.action': 'Naplánovat první výlet',
 
+  // archiv
+  'archive.title': 'Archiv',
+  'archive.subtitle':
+    'Výlety, které už nejsou aktivní. Data zůstávají, jen se nepletou do seznamu.',
+  'archive.empty.title': 'Archiv je prázdný',
+  'archive.empty.body': 'Archivované výlety se sem přesunou a zůstanou jen ke čtení.',
+  'archive.empty.action': 'Zpět na výlety',
+  'archive.error.title': 'Archiv se nepodařilo načíst',
+
   // formulář výletu
   'tripForm.title': 'Nový výlet',
   'tripForm.subtitle': 'Zatím jen základ – kategorie a položky přidáš v detailu výletu.',
@@ -90,6 +100,8 @@ export const cs = {
   'tripCard.packed': '{packed} / {total} sbaleno',
   'tripCard.continue': 'Pokračovat v balení',
   'tripCard.review': 'Zkontrolovat balení',
+  'tripCard.restore': 'Obnovit výlet',
+  'tripCard.restoring': 'Obnovuji…',
 
   // kategorie a položky
   'category.bagSelect': 'Taška pro {name}',

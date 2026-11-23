@@ -85,6 +85,22 @@ export const Archived: Story = {
   },
 };
 
+/** Karta v archivu – kromě náhledu nabízí i obnovení výletu. */
+export const ArchivedWithRestore: Story = {
+  args: {
+    trip: { ...asiaTrip, packed: 40, total: 40, status: 'archived' },
+    onRestore: () => undefined,
+  },
+};
+
+export const RestorePending: Story = {
+  args: {
+    trip: { ...asiaTrip, packed: 40, total: 40, status: 'archived' },
+    onRestore: () => undefined,
+    restorePending: true,
+  },
+};
+
 export const LongText: Story = {
   args: {
     trip: {

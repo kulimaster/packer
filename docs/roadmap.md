@@ -21,7 +21,7 @@ Mimo v1: sdílení výletů, počasí, AI tipy, fotky, realtime, archiv jako sam
 | Verze | Co |
 |---|---|
 | v1.1 | Sdílení výletů – `TripMember`, pozvánky, role owner/editor/viewer |
-| v1.2 | Archiv výletů jako obrazovka, duplikace výletu |
+| v1.2 | ~~Archiv výletů jako obrazovka, duplikace výletu~~ – hotovo (duplikace 21. 11. 2026, archiv 23. 11. 2026) |
 | v2 | Počasí destinace (Open-Meteo), travel intel, smart weight suggestions |
 | v2.1 | Fotky výletů (storage), export do PDF |
 | ? | Realtime sync (SignalR), mobilní app (React Native) – jen pokud bude potřeba |

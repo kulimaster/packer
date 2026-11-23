@@ -462,6 +462,33 @@ export function useSetTripArchived(tripId: string) {
   });
 }
 
+export type SetTripArchivedInput = {
+  tripId: string;
+  isArchived: boolean;
+};
+
+/**
+ * Archivace a obnovení bez vazby na otevřený detail – používá se v seznamu
+ * archivovaných výletů, kde se tripId bere z karty.
+ */
+export function useArchiveTrip() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ tripId, isArchived }: SetTripArchivedInput): Promise<void> => {
+      const { error, response } = await api.PATCH('/api/trips/{tripId}/archived', {
+        params: { path: { tripId } },
+        body: { isArchived },
+      });
+
+      if (error) {
+        throw toApiError(error, response.status);
+      }
+    },
+    onSuccess: (_data, { tripId }) => invalidateTrip(queryClient, tripId),
+  });
+}
+
 /**
  * API vrací stav jako enum (`InProgress`), karta používá kebab-case. Mapování je tady,
  * ne v komponentě – karta nemá vědět, jak vypadá kontrakt.
