@@ -76,6 +76,29 @@ public sealed class TemplateItem
         Position = DomainGuard.AtLeast(position, 0, "template_item_position", nameof(position));
     }
 
+    /// <summary>Úprava obsahu položky; pořadí a příslušnost k šabloně zůstávají.</summary>
+    public void Update(
+        string? categoryName,
+        string? title,
+        string? note,
+        int quantity,
+        bool isEssential,
+        ItemTraits flags,
+        int? weightGrams)
+    {
+        CategoryName = DomainGuard.RequiredText(
+            categoryName,
+            CategoryNameMaxLength,
+            "template_item_category",
+            nameof(categoryName));
+        Title = DomainGuard.RequiredText(title, TitleMaxLength, "template_item_title", nameof(title));
+        Note = DomainGuard.OptionalText(note, NoteMaxLength, "template_item_note", nameof(note));
+        Quantity = ValidateQuantity(quantity);
+        IsEssential = isEssential;
+        Flags = flags;
+        WeightGrams = ValidateWeight(weightGrams);
+    }
+
     private static int ValidateQuantity(int quantity)
     {
         if (quantity > QuantityMax)

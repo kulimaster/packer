@@ -1,10 +1,10 @@
 import { Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import type { BadgeTone } from '@/components/ui/badge.variants';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/cn';
-import { useI18n, type MessageKey } from '@/lib/i18n';
+import { useI18n } from '@/lib/i18n';
 import { formatWeight } from '../format';
+import { itemTraitMeta, itemTraitNames } from '../item-traits';
 
 export type PackingItem = {
   id: string;
@@ -18,20 +18,6 @@ export type PackingItem = {
   isPacked: boolean;
   estimatedWeightGrams: number;
 };
-
-const traitLabels: Record<string, { messageKey: MessageKey; tone: BadgeTone }> = {
-  CarryOnOnly: { messageKey: 'item.trait.carryOnOnly', tone: 'info' },
-  Fragile: { messageKey: 'item.trait.fragile', tone: 'warning' },
-  TsaLiquid: { messageKey: 'item.trait.tsaLiquid', tone: 'info' },
-  Battery: { messageKey: 'item.trait.battery', tone: 'warning' },
-};
-
-function traitKeys(flags: string): string[] {
-  return flags
-    .split(',')
-    .map((flag) => flag.trim())
-    .filter((flag) => flag.length > 0 && flag !== 'None');
-}
 
 type ItemRowProps = {
   item: PackingItem;
@@ -53,7 +39,7 @@ export function ItemRow({
   className,
 }: ItemRowProps) {
   const { t, locale } = useI18n();
-  const traits = traitKeys(item.flags);
+  const traits = itemTraitNames(item.flags);
 
   return (
     <li
@@ -93,13 +79,13 @@ export function ItemRow({
           {item.isEssential ? <Badge tone="essential">{t('item.essential')}</Badge> : null}
 
           {traits.map((trait) => {
-            const meta = traitLabels[trait];
+            const meta = itemTraitMeta[trait];
 
-            return meta ? (
+            return (
               <Badge key={trait} tone={meta.tone}>
                 {t(meta.messageKey)}
               </Badge>
-            ) : null;
+            );
           })}
         </div>
 

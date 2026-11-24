@@ -1,5 +1,6 @@
 import { Pencil, Sparkles, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -107,7 +108,15 @@ export function TemplatesPage() {
                   </Card>
                 ) : (
                   <>
-                    <TemplateCard template={toTemplateCard(template)} className="flex-1" />
+                    <Link
+                      to={`/templates/${template.id}`}
+                      className="flex-1 rounded-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    >
+                      <TemplateCard
+                        template={toTemplateCard(template)}
+                        className="h-full hover:border-outline-strong"
+                      />
+                    </Link>
 
                     {template.isSystem ? null : (
                       <div className="flex items-center justify-end gap-1">

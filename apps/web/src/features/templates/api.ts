@@ -1,14 +1,43 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { api, toApiError } from '@/lib/api/client';
 import type { components } from '@/lib/api/schema';
 import type { TemplateCardData } from './components/template-card';
 
 export type TemplateSummaryDto = components['schemas']['TemplateSummary'];
+export type TemplateDetailsDto = components['schemas']['TemplateDetails'];
+export type TemplateItemDto = components['schemas']['TemplateItemDetails'];
 export type ImportTemplatesResultDto = components['schemas']['ImportTemplatesResult'];
 
 export const templateKeys = {
   list: ['templates'] as const,
+  detail: (templateId: string) => ['templates', templateId] as const,
 };
+
+/**
+ * Seznam i detail se mění společně – karta v knihovně ukazuje počty položek
+ * a hmotnost, které se počítají z detailu.
+ */
+function invalidateTemplates(queryClient: QueryClient) {
+  void queryClient.invalidateQueries({ queryKey: templateKeys.list });
+}
+
+export function useTemplate(templateId: string) {
+  return useQuery({
+    queryKey: templateKeys.detail(templateId),
+    queryFn: async (): Promise<TemplateDetailsDto> => {
+      const { data, error, response } = await api.GET('/api/templates/{templateId}', {
+        params: { path: { templateId } },
+      });
+
+      if (!data) {
+        throw toApiError(error, response.status);
+      }
+
+      return data;
+    },
+    enabled: templateId.length > 0,
+  });
+}
 
 export function useTemplates() {
   return useQuery({
@@ -142,6 +171,80 @@ export function useDeleteTemplate() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: templateKeys.list });
     },
+  });
+}
+
+export type TemplateItemInput = {
+  categoryName: string;
+  title: string;
+  note: string | null;
+  quantity: number;
+  isEssential: boolean;
+  /** Bitová maska z API jako string (`None`, `Fragile, Battery`). */
+  flags: string;
+  weightGrams: number | null;
+};
+
+export function useAddTemplateItem(templateId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: TemplateItemInput): Promise<TemplateItemDto> => {
+      const { data, error, response } = await api.POST('/api/templates/{templateId}/items', {
+        params: { path: { templateId } },
+        body: input,
+      });
+
+      if (!data) {
+        throw toApiError(error, response.status);
+      }
+
+      return data;
+    },
+    onSuccess: () => invalidateTemplates(queryClient),
+  });
+}
+
+export function useUpdateTemplateItem(templateId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      itemId,
+      ...body
+    }: TemplateItemInput & { itemId: string }): Promise<TemplateItemDto> => {
+      const { data, error, response } = await api.PUT(
+        '/api/templates/{templateId}/items/{itemId}',
+        {
+          params: { path: { templateId, itemId } },
+          body,
+        },
+      );
+
+      if (!data) {
+        throw toApiError(error, response.status);
+      }
+
+      return data;
+    },
+    onSuccess: () => invalidateTemplates(queryClient),
+  });
+}
+
+export function useDeleteTemplateItem(templateId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (itemId: string): Promise<void> => {
+      const { error, response } = await api.DELETE('/api/templates/{templateId}/items/{itemId}', {
+        params: { path: { templateId, itemId } },
+      });
+
+      if (error) {
+        throw toApiError(error, response.status);
+      }
+    },
+    onSuccess: () => invalidateTemplates(queryClient),
   });
 }
 

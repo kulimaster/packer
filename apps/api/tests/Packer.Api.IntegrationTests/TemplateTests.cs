@@ -2,6 +2,7 @@ using System.Net;
 using Packer.Application.Templates.GetTemplate;
 using Packer.Application.Templates.GetTemplates;
 using Packer.Application.Trips.ImportTemplates;
+using Packer.Domain.Trips;
 
 namespace Packer.Api.IntegrationTests;
 
@@ -419,6 +420,207 @@ public sealed class TemplateTests(PackerApiFactory factory) : ApiTestBase(factor
 
         Assert.Equal(6, templates.Count);
         Assert.All(templates, entry => Assert.True(entry.IsSystem));
+    }
+
+    [Fact]
+    public async Task AddItem_appends_to_own_template()
+    {
+        using var client = CreateClient();
+        await RegisterAsync(client);
+        var trip = await CreateTripAsync(client);
+        var template = await CreateTemplateAsync(client, trip.Id, "Prázdná šablona");
+
+        var response = await PostAsync(client, $"/api/templates/{template.Id}/items", new
+        {
+            categoryName = "Electronics",
+            title = "Power bank",
+            note = "Nabít před odletem",
+            quantity = 1,
+            isEssential = false,
+            flags = "Battery, CarryOnOnly",
+            weightGrams = 240,
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var item = await ReadAsync<TemplateItemDetails>(response);
+
+        Assert.Equal($"/api/templates/{template.Id}/items/{item.Id}", response.Headers.Location?.OriginalString);
+        Assert.Equal("Electronics", item.CategoryName);
+        Assert.Equal("Power bank", item.Title);
+        Assert.Equal("Nabít před odletem", item.Note);
+        Assert.Equal(ItemTraits.Battery | ItemTraits.CarryOnOnly, item.Flags);
+        Assert.Equal(240, item.EstimatedWeightGrams);
+
+        var detail = await ReadAsync<TemplateDetails>(
+            await client.GetAsync($"/api/templates/{template.Id}"));
+
+        Assert.Single(detail.Items);
+        Assert.Equal(240, detail.EstimatedWeightGrams);
+        Assert.Equal(["Electronics"], detail.Items.Select(entry => entry.CategoryName));
+    }
+
+    [Fact]
+    public async Task UpdateItem_changes_own_item()
+    {
+        using var client = CreateClient();
+        await RegisterAsync(client);
+        var trip = await CreateTripAsync(client);
+        var documents = await CreateCategoryAsync(client, trip.Id, "Documents", "lock");
+        await CreateItemAsync(client, documents.Id, "Passport", quantity: 1, weightGrams: 30);
+        var template = await CreateTemplateAsync(client, trip.Id, "Doklady");
+
+        var detail = await ReadAsync<TemplateDetails>(
+            await client.GetAsync($"/api/templates/{template.Id}"));
+        var itemId = Assert.Single(detail.Items).Id;
+
+        var response = await PutAsync(client, $"/api/templates/{template.Id}/items/{itemId}", new
+        {
+            categoryName = "Documents",
+            title = "Passport + visa",
+            note = "Dvě kopie",
+            quantity = 2,
+            isEssential = true,
+            flags = "None",
+            weightGrams = 40,
+        });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var updated = await ReadAsync<TemplateItemDetails>(response);
+
+        Assert.Equal(itemId, updated.Id);
+        Assert.Equal("Passport + visa", updated.Title);
+        Assert.Equal(2, updated.Quantity);
+        Assert.True(updated.IsEssential);
+        Assert.Equal(80, updated.EstimatedWeightGrams);
+    }
+
+    [Fact]
+    public async Task DeleteItem_removes_item_from_own_template()
+    {
+        using var client = CreateClient();
+        await RegisterAsync(client);
+        var trip = await CreateTripAsync(client);
+        var documents = await CreateCategoryAsync(client, trip.Id, "Documents", "lock");
+        await CreateItemAsync(client, documents.Id, "Passport", quantity: 1, weightGrams: 30);
+        await CreateItemAsync(client, documents.Id, "Visa", quantity: 1, weightGrams: 10);
+        var template = await CreateTemplateAsync(client, trip.Id, "Doklady");
+
+        var detail = await ReadAsync<TemplateDetails>(
+            await client.GetAsync($"/api/templates/{template.Id}"));
+        var visa = detail.Items.Single(item => item.Title == "Visa");
+
+        var response = await DeleteAsync(client, $"/api/templates/{template.Id}/items/{visa.Id}");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        var after = await ReadAsync<TemplateDetails>(
+            await client.GetAsync($"/api/templates/{template.Id}"));
+
+        var remaining = Assert.Single(after.Items);
+
+        Assert.Equal("Passport", remaining.Title);
+        Assert.Equal(30, after.EstimatedWeightGrams);
+    }
+
+    [Fact]
+    public async Task Items_of_system_template_cannot_be_changed()
+    {
+        using var client = CreateClient();
+        await RegisterAsync(client);
+        var template = await FindTemplateAsync(client, "Winter Trip");
+
+        var detail = await ReadAsync<TemplateDetails>(
+            await client.GetAsync($"/api/templates/{template.Id}"));
+        var itemId = detail.Items[0].Id;
+
+        var added = await PostAsync(client, $"/api/templates/{template.Id}/items", new
+        {
+            categoryName = "Clothing",
+            title = "Hacked",
+            quantity = 1,
+        });
+
+        Assert.Equal(HttpStatusCode.NotFound, added.StatusCode);
+        Assert.Equal("template_not_found", (await ReadAsync<ErrorBody>(added)).Code);
+
+        var updated = await PutAsync(client, $"/api/templates/{template.Id}/items/{itemId}", new
+        {
+            categoryName = "Clothing",
+            title = "Hacked",
+            quantity = 1,
+        });
+
+        Assert.Equal(HttpStatusCode.NotFound, updated.StatusCode);
+        Assert.Equal("template_not_found", (await ReadAsync<ErrorBody>(updated)).Code);
+
+        var deleted = await DeleteAsync(client, $"/api/templates/{template.Id}/items/{itemId}");
+
+        Assert.Equal(HttpStatusCode.NotFound, deleted.StatusCode);
+    }
+
+    [Fact]
+    public async Task Item_from_another_template_returns_not_found()
+    {
+        using var client = CreateClient();
+        await RegisterAsync(client);
+        var trip = await CreateTripAsync(client);
+        var documents = await CreateCategoryAsync(client, trip.Id, "Documents", "lock");
+        await CreateItemAsync(client, documents.Id, "Passport", quantity: 1, weightGrams: 30);
+        var first = await CreateTemplateAsync(client, trip.Id, "První");
+        var second = await CreateTemplateAsync(client, trip.Id, "Druhá");
+
+        var detail = await ReadAsync<TemplateDetails>(
+            await client.GetAsync($"/api/templates/{second.Id}"));
+        var foreignItemId = Assert.Single(detail.Items).Id;
+
+        var updated = await PutAsync(client, $"/api/templates/{first.Id}/items/{foreignItemId}", new
+        {
+            categoryName = "Documents",
+            title = "Podstrčeno",
+            quantity = 1,
+        });
+
+        Assert.Equal(HttpStatusCode.NotFound, updated.StatusCode);
+        Assert.Equal("template_item_not_found", (await ReadAsync<ErrorBody>(updated)).Code);
+
+        var deleted = await DeleteAsync(client, $"/api/templates/{first.Id}/items/{foreignItemId}");
+
+        Assert.Equal(HttpStatusCode.NotFound, deleted.StatusCode);
+
+        // Položka zůstala tam, kam patří.
+        var secondAfter = await ReadAsync<TemplateDetails>(
+            await client.GetAsync($"/api/templates/{second.Id}"));
+
+        Assert.Equal("Passport", Assert.Single(secondAfter.Items).Title);
+    }
+
+    [Fact]
+    public async Task AddItem_validates_payload()
+    {
+        using var client = CreateClient();
+        await RegisterAsync(client);
+        var trip = await CreateTripAsync(client);
+        var template = await CreateTemplateAsync(client, trip.Id, "Validace");
+
+        var response = await PostAsync(client, $"/api/templates/{template.Id}/items", new
+        {
+            categoryName = "",
+            title = "",
+            quantity = 0,
+            weightGrams = -5,
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var errors = await ReadAsync<ErrorBody>(response);
+
+        Assert.NotNull(errors.Errors);
+        Assert.Contains("categoryName", errors.Errors.Keys);
+        Assert.Contains("title", errors.Errors.Keys);
+        Assert.Contains("quantity", errors.Errors.Keys);
+        Assert.Contains("weightGrams", errors.Errors.Keys);
     }
 
     private static async Task<TemplateSummary> CreateTemplateAsync(

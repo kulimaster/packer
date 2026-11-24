@@ -65,6 +65,9 @@ Skript stáhne spec a přepíše `src/lib/api/schema.d.ts`.
 | `POST`   | `/api/templates`                     | vlastní šablona z výletu (`tripId` + název), položky se zkopírují, `201`         |
 | `PUT`    | `/api/templates/{templateId}`        | úprava metadat vlastní šablony, `200`; systémová ani cizí = `404`                |
 | `DELETE` | `/api/templates/{templateId}`        | smazání vlastní šablony i s položkami, `204`; systémová ani cizí = `404`         |
+| `POST`   | `/api/templates/{templateId}/items`  | přidání položky do vlastní šablony, `201`; systémová ani cizí = `404`            |
+| `PUT`    | `/api/templates/{templateId}/items/{itemId}` | úprava položky vlastní šablony, `200`; cizí položka = `404`              |
+| `DELETE` | `/api/templates/{templateId}/items/{itemId}` | smazání položky vlastní šablony, `204`; cizí položka = `404`             |
 | `POST`   | `/api/trips/{tripId}/templates`      | import šablon do výletu, `200` s počty vytvořených kategorií a položek           |
 | `GET`    | `/api/auth/csrf`                     | antiforgery token                                                                |
 | `POST`   | `/api/auth/register`                 | registrace + přihlášení                                                          |

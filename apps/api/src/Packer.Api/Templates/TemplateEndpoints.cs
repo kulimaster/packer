@@ -1,9 +1,12 @@
 using Packer.Api.Common;
+using Packer.Application.Templates.AddTemplateItem;
 using Packer.Application.Templates.CreateTemplate;
 using Packer.Application.Templates.DeleteTemplate;
+using Packer.Application.Templates.DeleteTemplateItem;
 using Packer.Application.Templates.GetTemplate;
 using Packer.Application.Templates.GetTemplates;
 using Packer.Application.Templates.UpdateTemplate;
+using Packer.Application.Templates.UpdateTemplateItem;
 using Packer.Application.Trips.ImportTemplates;
 
 namespace Packer.Api.Templates;
@@ -76,6 +79,54 @@ internal static class TemplateEndpoints
             CancellationToken cancellationToken) =>
         {
             await handler.HandleAsync(templateId, cancellationToken);
+
+            return Results.NoContent();
+        })
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces<ApiError>(StatusCodes.Status401Unauthorized)
+            .Produces<ApiError>(StatusCodes.Status404NotFound)
+            .AddEndpointFilter<AntiforgeryFilter>();
+
+        templates.MapPost("/{templateId:guid}/items", async (
+            Guid templateId,
+            AddTemplateItemRequest request,
+            AddTemplateItemHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            var item = await handler.HandleAsync(templateId, request, cancellationToken);
+
+            return Results.Created($"/api/templates/{templateId}/items/{item.Id}", item);
+        })
+            .Produces<TemplateItemDetails>(StatusCodes.Status201Created)
+            .Produces<ApiError>(StatusCodes.Status400BadRequest)
+            .Produces<ApiError>(StatusCodes.Status401Unauthorized)
+            .Produces<ApiError>(StatusCodes.Status404NotFound)
+            .AddEndpointFilter<AntiforgeryFilter>();
+
+        templates.MapPut("/{templateId:guid}/items/{itemId:guid}", async (
+            Guid templateId,
+            Guid itemId,
+            UpdateTemplateItemRequest request,
+            UpdateTemplateItemHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            var item = await handler.HandleAsync(templateId, itemId, request, cancellationToken);
+
+            return Results.Ok(item);
+        })
+            .Produces<TemplateItemDetails>(StatusCodes.Status200OK)
+            .Produces<ApiError>(StatusCodes.Status400BadRequest)
+            .Produces<ApiError>(StatusCodes.Status401Unauthorized)
+            .Produces<ApiError>(StatusCodes.Status404NotFound)
+            .AddEndpointFilter<AntiforgeryFilter>();
+
+        templates.MapDelete("/{templateId:guid}/items/{itemId:guid}", async (
+            Guid templateId,
+            Guid itemId,
+            DeleteTemplateItemHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            await handler.HandleAsync(templateId, itemId, cancellationToken);
 
             return Results.NoContent();
         })

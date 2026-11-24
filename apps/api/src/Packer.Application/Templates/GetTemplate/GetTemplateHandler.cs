@@ -25,7 +25,20 @@ public sealed record TemplateItemDetails(
     bool IsEssential,
     ItemTraits Flags,
     int? WeightGrams,
-    int EstimatedWeightGrams);
+    int EstimatedWeightGrams)
+{
+    public static TemplateItemDetails From(TemplateItem item) =>
+        new(
+            item.Id,
+            item.CategoryName,
+            item.Title,
+            item.Note,
+            item.Quantity,
+            item.IsEssential,
+            item.Flags,
+            item.WeightGrams,
+            (item.WeightGrams ?? 0) * item.Quantity);
+}
 
 public sealed class GetTemplateHandler(IAppDbContext db, ICurrentUser currentUser)
 {
@@ -44,16 +57,7 @@ public sealed class GetTemplateHandler(IAppDbContext db, ICurrentUser currentUse
             cancellationToken);
 
         var itemDetails = items
-            .Select(item => new TemplateItemDetails(
-                item.Id,
-                item.CategoryName,
-                item.Title,
-                item.Note,
-                item.Quantity,
-                item.IsEssential,
-                item.Flags,
-                item.WeightGrams,
-                (item.WeightGrams ?? 0) * item.Quantity))
+            .Select(TemplateItemDetails.From)
             .ToList();
 
         return new TemplateDetails(
