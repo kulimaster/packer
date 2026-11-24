@@ -423,6 +423,83 @@ public sealed class TemplateTests(PackerApiFactory factory) : ApiTestBase(factor
     }
 
     [Fact]
+    public async Task Duplicate_system_template_creates_editable_copy()
+    {
+        using var client = CreateClient();
+        await RegisterAsync(client);
+        var source = await FindTemplateAsync(client, "Winter Trip");
+
+        var sourceDetail = await ReadAsync<TemplateDetails>(
+            await client.GetAsync($"/api/templates/{source.Id}"));
+
+        var response = await PostAsync(client, $"/api/templates/{source.Id}/duplicate", new
+        {
+            name = "Zimní kopie",
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var copy = await ReadAsync<TemplateSummary>(response);
+
+        Assert.Equal("Zimní kopie", copy.Name);
+        Assert.False(copy.IsSystem);
+        Assert.NotEqual(source.Id, copy.Id);
+        Assert.Equal(source.ItemCount, copy.ItemCount);
+        Assert.Equal(source.EstimatedWeightGrams, copy.EstimatedWeightGrams);
+        Assert.Equal(source.Categories, copy.Categories);
+
+        // Kopie má vlastní položky se stejným obsahem a jde upravovat.
+        var copyDetail = await ReadAsync<TemplateDetails>(
+            await client.GetAsync($"/api/templates/{copy.Id}"));
+
+        Assert.Equal(
+            sourceDetail.Items.Select(item => item.Title),
+            copyDetail.Items.Select(item => item.Title));
+        Assert.DoesNotContain(copyDetail.Items, item => sourceDetail.Items.Any(entry => entry.Id == item.Id));
+
+        var renamed = await PutAsync(client, $"/api/templates/{copy.Id}", new
+        {
+            name = "Moje zimní výbava",
+            icon = copy.Icon,
+            accent = copy.Accent,
+        });
+
+        Assert.Equal(HttpStatusCode.OK, renamed.StatusCode);
+
+        // Předloha zůstala systémová a nedotčená.
+        var sourceAfter = await ReadAsync<TemplateSummary>(
+            await client.GetAsync($"/api/templates/{source.Id}"));
+
+        Assert.True(sourceAfter.IsSystem);
+        Assert.Equal("Winter Trip", sourceAfter.Name);
+    }
+
+    [Fact]
+    public async Task Duplicate_foreign_template_returns_not_found()
+    {
+        using var owner = CreateClient();
+        await RegisterAsync(owner);
+        var trip = await CreateTripAsync(owner);
+        var template = await CreateTemplateAsync(owner, trip.Id, "Soukromá šablona");
+
+        using var stranger = CreateClient();
+        await RegisterAsync(stranger);
+
+        var response = await PostAsync(stranger, $"/api/templates/{template.Id}/duplicate", new
+        {
+            name = "Ukradená kopie",
+        });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("template_not_found", (await ReadAsync<ErrorBody>(response)).Code);
+
+        var templates = await ReadAsync<List<TemplateSummary>>(await stranger.GetAsync("/api/templates"));
+
+        Assert.Equal(6, templates.Count);
+        Assert.All(templates, entry => Assert.True(entry.IsSystem));
+    }
+
+    [Fact]
     public async Task AddItem_appends_to_own_template()
     {
         using var client = CreateClient();

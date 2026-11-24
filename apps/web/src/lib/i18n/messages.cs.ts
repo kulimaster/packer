@@ -219,6 +219,9 @@ export const cs = {
   'templates.hintDetail': 'Kategorie se párují podle názvu, položky se přidají na konec.',
   'templates.edit': 'Upravit',
   'templates.delete': 'Smazat',
+  'templates.duplicate': 'Duplikovat',
+  'templates.duplicating': 'Kopíruji…',
+  'templates.copyName': '{name} (kopie)',
   'templateForm.title.create': 'Uložit výlet jako šablonu',
   'templateForm.subtitle.create':
     'Položky výletu se zkopírují do nové šablony. Kategorie si šablona ponese v sobě.',
@@ -246,7 +249,7 @@ export const cs = {
   'templateDetail.system': 'Systémová',
   'templateDetail.own': 'Vlastní',
   'templateDetail.systemNotice':
-    'Systémová šablona je jen ke čtení. Chceš si ji upravit? Ulož si vlastní kopii z detailu výletu.',
+    'Systémová šablona je jen ke čtení. Duplikuj si ji a uprav vlastní kopii.',
   'templateDetail.addItem': 'Přidat položku',
   'templateDetail.empty.title': 'Šablona je prázdná',
   'templateDetail.empty.body':

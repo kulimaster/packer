@@ -15,6 +15,7 @@ using Packer.Application.Templates.AddTemplateItem;
 using Packer.Application.Templates.CreateTemplate;
 using Packer.Application.Templates.DeleteTemplate;
 using Packer.Application.Templates.DeleteTemplateItem;
+using Packer.Application.Templates.DuplicateTemplate;
 using Packer.Application.Templates.GetTemplate;
 using Packer.Application.Templates.GetTemplates;
 using Packer.Application.Templates.UpdateTemplate;
@@ -66,6 +67,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<CreateTemplateHandler>();
         services.AddScoped<UpdateTemplateHandler>();
         services.AddScoped<DeleteTemplateHandler>();
+        services.AddScoped<DuplicateTemplateHandler>();
         services.AddScoped<AddTemplateItemHandler>();
         services.AddScoped<UpdateTemplateItemHandler>();
         services.AddScoped<DeleteTemplateItemHandler>();
@@ -84,6 +86,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IValidator<ImportTemplatesRequest>, ImportTemplatesRequestValidator>();
         services.AddScoped<IValidator<CreateTemplateRequest>, CreateTemplateRequestValidator>();
         services.AddScoped<IValidator<UpdateTemplateRequest>, UpdateTemplateRequestValidator>();
+        services.AddScoped<IValidator<DuplicateTemplateRequest>, DuplicateTemplateRequestValidator>();
         services.AddScoped<IValidator<AddTemplateItemRequest>, AddTemplateItemRequestValidator>();
         services.AddScoped<IValidator<UpdateTemplateItemRequest>, UpdateTemplateItemRequestValidator>();
 

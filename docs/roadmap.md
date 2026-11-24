@@ -14,7 +14,7 @@ Rozsah potvrzený 2026-11-16.
 | 6 | Bagy a váhy | příruční/zavazadlový, limit kg, odhad hmotnosti |
 | 7 | Šablony | knihovna + import do výletu |
 
-Mimo v1: sdílení výletů, počasí, AI tipy, fotky, realtime, archiv jako samostatná obrazovka.
+Mimo v1: sdílení výletů, počasí, AI tipy, fotky, realtime.
 
 ## Po v1
 

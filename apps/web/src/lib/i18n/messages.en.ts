@@ -205,6 +205,9 @@ export const en: Messages = {
   'templates.hintDetail': 'Categories are matched by name, items are appended at the end.',
   'templates.edit': 'Edit',
   'templates.delete': 'Delete',
+  'templates.duplicate': 'Duplicate',
+  'templates.duplicating': 'Copying…',
+  'templates.copyName': '{name} (copy)',
   'templateForm.title.create': 'Save trip as a template',
   'templateForm.subtitle.create':
     'The trip items are copied into a new template. Categories travel with the template.',
@@ -232,7 +235,7 @@ export const en: Messages = {
   'templateDetail.system': 'System',
   'templateDetail.own': 'Custom',
   'templateDetail.systemNotice':
-    'System templates are read-only. Want to adjust one? Save your own copy from a trip detail.',
+    'System templates are read-only. Duplicate one and edit your own copy.',
   'templateDetail.addItem': 'Add item',
   'templateDetail.empty.title': 'This template is empty',
   'templateDetail.empty.body':

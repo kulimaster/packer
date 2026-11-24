@@ -174,6 +174,37 @@ export function useDeleteTemplate() {
   });
 }
 
+export type DuplicateTemplateInput = {
+  templateId: string;
+  /** Lokalizovaný název kopie; prázdný by nechal název předlohy. */
+  name: string;
+};
+
+export function useDuplicateTemplate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      templateId,
+      name,
+    }: DuplicateTemplateInput): Promise<TemplateSummaryDto> => {
+      const { data, error, response } = await api.POST('/api/templates/{templateId}/duplicate', {
+        params: { path: { templateId } },
+        body: { name },
+      });
+
+      if (!data) {
+        throw toApiError(error, response.status);
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: templateKeys.list });
+    },
+  });
+}
+
 export type TemplateItemInput = {
   categoryName: string;
   title: string;

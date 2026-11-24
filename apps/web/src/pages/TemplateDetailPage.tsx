@@ -1,4 +1,4 @@
-import { ArrowLeft, BookmarkPlus, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react';
+import { ArrowLeft, BookmarkPlus, Copy, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ import {
   useAddTemplateItem,
   useDeleteTemplate,
   useDeleteTemplateItem,
+  useDuplicateTemplate,
   useTemplate,
   useUpdateTemplate,
   useUpdateTemplateItem,
@@ -30,6 +31,7 @@ import {
   TemplateItemForm,
   type TemplateItemValues,
 } from '@/features/templates/components/template-item-form';
+import { templateCopyName } from '@/features/templates/copy-name';
 
 export function TemplateDetailPage() {
   const { t } = useI18n();
@@ -77,6 +79,7 @@ function TemplateDetailContent({
   const navigate = useNavigate();
   const updateTemplate = useUpdateTemplate();
   const deleteTemplate = useDeleteTemplate();
+  const duplicateTemplate = useDuplicateTemplate();
   const addItem = useAddTemplateItem(templateId);
   const updateItem = useUpdateTemplateItem(templateId);
   const deleteItem = useDeleteTemplateItem(templateId);
@@ -123,6 +126,13 @@ function TemplateDetailContent({
     deleteTemplate.mutate(templateId, { onSuccess: () => void navigate('/templates') });
   };
 
+  const handleDuplicateTemplate = () => {
+    duplicateTemplate.mutate(
+      { templateId, name: templateCopyName(template.name, t) },
+      { onSuccess: (copy) => void navigate(`/templates/${copy.id}`) },
+    );
+  };
+
   const handleAddItem = (values: TemplateItemValues) => {
     addItem.mutate(toInput(values), { onSuccess: () => setAdding(false) });
   };
@@ -140,7 +150,11 @@ function TemplateDetailContent({
 
   const updateItemError = errorText(updateItem.error, t);
   const mutationError = errorText(
-    updateTemplate.error ?? deleteTemplate.error ?? addItem.error ?? deleteItem.error,
+    updateTemplate.error ??
+      deleteTemplate.error ??
+      duplicateTemplate.error ??
+      addItem.error ??
+      deleteItem.error,
     t,
   );
 
@@ -156,6 +170,16 @@ function TemplateDetailContent({
         </Link>
 
         <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDuplicateTemplate}
+            isLoading={duplicateTemplate.isPending}
+          >
+            <Copy className="size-4" aria-hidden />
+            {t('templates.duplicate')}
+          </Button>
+
           {!template.isSystem && !editingMetadata ? (
             <Button
               variant="ghost"

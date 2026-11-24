@@ -3,6 +3,7 @@ using Packer.Application.Templates.AddTemplateItem;
 using Packer.Application.Templates.CreateTemplate;
 using Packer.Application.Templates.DeleteTemplate;
 using Packer.Application.Templates.DeleteTemplateItem;
+using Packer.Application.Templates.DuplicateTemplate;
 using Packer.Application.Templates.GetTemplate;
 using Packer.Application.Templates.GetTemplates;
 using Packer.Application.Templates.UpdateTemplate;
@@ -83,6 +84,22 @@ internal static class TemplateEndpoints
             return Results.NoContent();
         })
             .Produces(StatusCodes.Status204NoContent)
+            .Produces<ApiError>(StatusCodes.Status401Unauthorized)
+            .Produces<ApiError>(StatusCodes.Status404NotFound)
+            .AddEndpointFilter<AntiforgeryFilter>();
+
+        templates.MapPost("/{templateId:guid}/duplicate", async (
+            Guid templateId,
+            DuplicateTemplateRequest request,
+            DuplicateTemplateHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            var template = await handler.HandleAsync(templateId, request, cancellationToken);
+
+            return Results.Created($"/api/templates/{template.Id}", template);
+        })
+            .Produces<TemplateSummary>(StatusCodes.Status201Created)
+            .Produces<ApiError>(StatusCodes.Status400BadRequest)
             .Produces<ApiError>(StatusCodes.Status401Unauthorized)
             .Produces<ApiError>(StatusCodes.Status404NotFound)
             .AddEndpointFilter<AntiforgeryFilter>();

@@ -1,4 +1,4 @@
-import { Pencil, Sparkles, Trash2 } from 'lucide-react';
+import { Copy, Pencil, Sparkles, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,12 +6,14 @@ import { Card } from '@/components/ui/card';
 import {
   toTemplateCard,
   useDeleteTemplate,
+  useDuplicateTemplate,
   useTemplates,
   useUpdateTemplate,
   type TemplateSummaryDto,
 } from '@/features/templates/api';
 import { TemplateCard } from '@/features/templates/components/template-card';
 import { TemplateForm, type TemplateValues } from '@/features/templates/components/template-form';
+import { templateCopyName } from '@/features/templates/copy-name';
 import { ApiError } from '@/lib/api/client';
 import { errorText } from '@/lib/api/errors';
 import { useI18n } from '@/lib/i18n';
@@ -21,9 +23,11 @@ export function TemplatesPage() {
   const templates = useTemplates();
   const updateTemplate = useUpdateTemplate();
   const deleteTemplate = useDeleteTemplate();
+  const duplicateTemplate = useDuplicateTemplate();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
 
   const handleUpdate = (template: TemplateSummaryDto, values: TemplateValues) => {
     updateTemplate.mutate(
@@ -41,6 +45,14 @@ export function TemplatesPage() {
   const handleDelete = (templateId: string) => {
     setDeletingId(templateId);
     deleteTemplate.mutate(templateId, { onSettled: () => setDeletingId(null) });
+  };
+
+  const handleDuplicate = (template: TemplateSummaryDto) => {
+    setDuplicatingId(template.id);
+    duplicateTemplate.mutate(
+      { templateId: template.id, name: templateCopyName(template.name, t) },
+      { onSettled: () => setDuplicatingId(null) },
+    );
   };
 
   return (
@@ -75,9 +87,12 @@ export function TemplatesPage() {
             {t('templates.hint')} {t('templates.hintDetail')}
           </p>
 
-          {updateTemplate.error || deleteTemplate.error ? (
+          {updateTemplate.error || deleteTemplate.error || duplicateTemplate.error ? (
             <p role="alert" className="rounded-input bg-danger-bg px-3 py-2 text-sm text-danger-fg">
-              {errorText(updateTemplate.error ?? deleteTemplate.error, t)}
+              {errorText(
+                updateTemplate.error ?? deleteTemplate.error ?? duplicateTemplate.error,
+                t,
+              )}
             </p>
           ) : null}
 
@@ -118,30 +133,42 @@ export function TemplatesPage() {
                       />
                     </Link>
 
-                    {template.isSystem ? null : (
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            updateTemplate.reset();
-                            setEditingId(template.id);
-                          }}
-                        >
-                          <Pencil className="size-4" aria-hidden />
-                          {t('templates.edit')}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(template.id)}
-                          isLoading={deleteTemplate.isPending && deletingId === template.id}
-                        >
-                          <Trash2 className="size-4" aria-hidden />
-                          {t('templates.delete')}
-                        </Button>
-                      </div>
-                    )}
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDuplicate(template)}
+                        isLoading={duplicateTemplate.isPending && duplicatingId === template.id}
+                      >
+                        <Copy className="size-4" aria-hidden />
+                        {t('templates.duplicate')}
+                      </Button>
+
+                      {template.isSystem ? null : (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              updateTemplate.reset();
+                              setEditingId(template.id);
+                            }}
+                          >
+                            <Pencil className="size-4" aria-hidden />
+                            {t('templates.edit')}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(template.id)}
+                            isLoading={deleteTemplate.isPending && deletingId === template.id}
+                          >
+                            <Trash2 className="size-4" aria-hidden />
+                            {t('templates.delete')}
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </>
                 )}
               </li>
