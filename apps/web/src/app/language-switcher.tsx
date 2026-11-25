@@ -16,7 +16,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
       variant="ghost"
       size="sm"
       className={cn('justify-start', className)}
-      aria-label={t('app.switchLanguage')}
+      aria-label={`${t('app.switchLanguage')} – ${t(`app.languageName.${target}`)}`}
       onClick={() => setLanguage(target)}
     >
       <Languages className="size-4" aria-hidden />

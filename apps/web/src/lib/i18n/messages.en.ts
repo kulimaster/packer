@@ -17,6 +17,8 @@ export const en: Messages = {
   'nav.templates': 'Templates',
   'nav.archive': 'Archive',
   'nav.settings': 'Settings',
+  'nav.primary': 'Main navigation',
+  'app.skipToContent': 'Skip to content',
   'app.version': 'v0.1 · in development',
   'app.switchLanguage': 'Switch to Czech',
   'app.languageName.cs': 'Čeština',

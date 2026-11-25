@@ -53,13 +53,19 @@ export function TemplateDetailPage() {
         <p className="text-sm text-on-surface-variant">
           {notFound ? t('templateDetail.notFound.body') : errorText(template.error, t)}
         </p>
-        <div className="flex justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-3">
           <Link
             to="/templates"
             className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
           >
             {t('templateDetail.back')}
           </Link>
+
+          {notFound ? null : (
+            <Button variant="secondary" onClick={() => void template.refetch()}>
+              {t('common.tryAgain')}
+            </Button>
+          )}
         </div>
       </Card>
     );

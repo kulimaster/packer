@@ -20,6 +20,8 @@ export const cs = {
   'nav.templates': 'Šablony',
   'nav.archive': 'Archiv',
   'nav.settings': 'Nastavení',
+  'nav.primary': 'Hlavní navigace',
+  'app.skipToContent': 'Přeskočit na obsah',
   'app.version': 'v0.1 · vývoj',
   'app.switchLanguage': 'Přepnout do angličtiny',
   'app.languageName.cs': 'Čeština',

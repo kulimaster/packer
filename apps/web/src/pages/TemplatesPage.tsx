@@ -65,9 +65,12 @@ export function TemplatesPage() {
       {templates.isPending ? <TemplatesLoading /> : null}
 
       {templates.isError ? (
-        <Card className="space-y-2 px-6 py-8 text-center">
+        <Card className="space-y-4 px-6 py-12 text-center">
           <h2 className="text-lg font-semibold">{t('templates.error.title')}</h2>
           <p className="text-sm text-on-surface-variant">{errorText(templates.error, t)}</p>
+          <Button variant="secondary" onClick={() => void templates.refetch()}>
+            {t('common.tryAgain')}
+          </Button>
         </Card>
       ) : null}
 
