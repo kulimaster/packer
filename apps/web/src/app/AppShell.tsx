@@ -1,5 +1,6 @@
 import { Archive, LayoutGrid, Plane, SlidersHorizontal, type LucideIcon } from 'lucide-react';
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/cn';
 import { useI18n, type MessageKey } from '@/lib/i18n';
 import { LanguageSwitcher } from './language-switcher';
@@ -18,6 +19,23 @@ const navigation: NavigationItem[] = [
   { to: '/settings', messageKey: 'nav.settings', icon: SlidersHorizontal, end: false },
 ];
 
+/** Titulek okna podle sekce; detail výletu i šablony zůstává pod svou sekcí. */
+function sectionOf(pathname: string): MessageKey {
+  if (pathname.startsWith('/templates')) {
+    return 'nav.templates';
+  }
+
+  if (pathname.startsWith('/archive')) {
+    return 'nav.archive';
+  }
+
+  if (pathname.startsWith('/settings')) {
+    return 'nav.settings';
+  }
+
+  return 'nav.trips';
+}
+
 function Brand() {
   return (
     <Link
@@ -34,6 +52,11 @@ function Brand() {
 
 export function AppShell() {
   const { t } = useI18n();
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    document.title = `${t(sectionOf(pathname))} · Packer`;
+  }, [pathname, t]);
 
   return (
     <div className="min-h-dvh bg-surface">
